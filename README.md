@@ -1,5 +1,7 @@
 # newsLM
 
+News sources: NY Post(0), Breitbart (1), CNN (2), Washington Post (3), NPR (4)
+
 
 Data_file.pkl
 
