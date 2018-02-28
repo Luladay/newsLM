@@ -31,3 +31,12 @@ I used this to create the first dict with all of our data
 Data cleaning2.py
 
 This file splits the data into train test dev by a 60 20 20 split. Also creates the full and short files
+
+
+--
+create_vocab_embed_matrix.py 
+Creates vocabulary dictionary from train file, maps word to integer representing row in embeddings matrix
+Creates embeddings matrix from 50-dimensional GloVe vectors (dimensions for short vector: 62801 words (rows) x 50 (columns)
+
+glove.py
+File taken from cs224n assignment 1, very slightly modified
