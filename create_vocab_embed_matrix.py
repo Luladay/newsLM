@@ -21,7 +21,6 @@ def create_vocab_dict_helper(train_data, news_names):
 				if token not in vocab_dict:
 					vocab_dict[token] = num_tokens_so_far
 					num_tokens_so_far += 1
-					print num_tokens_so_far	
 			num_articles_so_far += 1
 	util.dumpVar("vocab_dict.pkl", vocab_dict)
 

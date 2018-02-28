@@ -9,6 +9,13 @@ cnn = "CNN_articles"
 wpost = "Washington_Post_articles"
 npr = "NPR_articles"
 
+nypost_label = 0
+bart_label = 1
+cnn_label = 2
+wpost_label = 3
+npr_label = 4
+
+
 glove_dimensions = 50
 
 
