@@ -35,8 +35,13 @@ This file splits the data into train test dev by a 60 20 20 split. Also creates 
 
 --
 create_vocab_embed_matrix.py 
+
 Creates vocabulary dictionary from train file, maps word to integer representing row in embeddings matrix
 Creates embeddings matrix from 50-dimensional GloVe vectors (dimensions for short vector: 62801 words (rows) x 50 (columns)
 
 glove.py
-File taken from cs224n assignment 1, very slightly modified
+
+File taken from cs224n assignment 1, very slightly modified!
+
+
+vocab_matrix and embeddings_matrix built from data_train_short.pkl
