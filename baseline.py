@@ -3,15 +3,18 @@ import tensorflow as tf
 import numpy as np
 
 
-# filename = "Data/data_train_short.pkl"
-# train_data = util.openPkl(filename)
+train_matrix = util.openPkl("train_matrix_short.pkl")
+train_labels = util.openPkl("train_labels_short.pkl")
+dev_matrix = util.openPkl("dev_matrix_short.pkl")
+dev_labels = util.openPkl("dev_labels_short.pkl")
+test_matrix = util.openPkl("test_matrix_short.pkl")
+test_labels = util.openPkl("test_labels_short.pkl")
 
 
-# let's assume for now that we have train_matrix and train_labels
-# as well as test_matrix and test_labels
 
-n_samples = test_matrix.shape[0] #confirm this later!!
-n_features = util.glove_dimensions
+
+n_samples = train_matrix.shape[0] 
+n_features = train_matrix.shape[1] #should be util.glove_dimensions
 n_classes = 5
 batch_size = 60
 n_epochs = 50
