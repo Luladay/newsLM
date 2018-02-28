@@ -5,16 +5,6 @@ import numpy as np
 import util as util
 
 
-nypost = "New_York_Post_articles"
-bart = "Breitbart_articles"
-cnn = "CNN_articles"
-wpost = "Washington_Post_articles"
-npr = "NPR_articles"
-
-dimensions = 50
-
-
-
 def create_vocab_dict_helper(train_data, news_names):
 	vocab_dict = {}	
 	vocab_dict[util.UNK] = 1
@@ -39,7 +29,7 @@ def create_vocab_dict(filename):
 	print "Opening train_data..."
 	train_short = util.openPkl(filename)
 	print "Done opening train_data!"
-	news_names = [nypost, bart, cnn, wpost, npr]
+	news_names = [util.nypost, util.bart, util.cnn, util.wpost, util.npr]
 	print "Creating vocab_dict now..."
 	create_vocab_dict_helper(train_short, news_names)
 	print "Done creating vocab_dict!"
@@ -51,7 +41,7 @@ def create_embed_matrix(glove_filename):
 	print "Done opening vocab_dict!"
 	print "Creating embed_matrix..."
 	vocab_size = len(vocab_dict)
-	embed_matrix = glove.loadWordVectors(vocab_dict, filepath=glove_filename, dimensions=dimensions)	
+	embed_matrix = glove.loadWordVectors(vocab_dict, filepath=glove_filename, dimensions=util.glove_dimensions)	
 	print "Done creating embed_matrix!"
 	print "Cleaning up the embeddings_matrix..."
 
@@ -59,8 +49,8 @@ def create_embed_matrix(glove_filename):
 	# should have empty field, so give them 0s and remap to UNK
 	for word in vocab_dict:
 		embed_matrix_word_index = vocab_dict[word]
-		if len(embed_matrix[embed_matrix_word_index]) < dimensions:
-			embed_matrix[embed_matrix_word_index] = [float(0) for x in range(dimensions)]
+		if len(embed_matrix[embed_matrix_word_index]) < util.glove_dimensions:
+			embed_matrix[embed_matrix_word_index] = [float(0) for x in range(util.glove_dimensions)]
 			vocab_dict[word] = vocab_dict[util.UNK]
 
 	print "Done cleaning up the data!"
