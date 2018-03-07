@@ -2,6 +2,8 @@ import pickle
 import tensorflow as tf
 import numpy as np
 
+#just trying this out
+#just making changes
 # change the filenames if the pickle files are in a Data folder
 train_matrix = util.openPkl("train_matrix_short.pkl")
 train_labels = util.openPkl("train_labels_short.pkl")
@@ -13,7 +15,7 @@ test_labels = util.openPkl("test_labels_short.pkl")
 
 
 
-n_samples = train_matrix.shape[0] 
+n_samples = train_matrix.shape[0]
 n_features = train_matrix.shape[1] #should be util.glove_dimensions
 n_classes = 5
 batch_size = 60
