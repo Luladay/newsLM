@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 #just trying this out
-#just making changes
+#just making changesh
 # change the filenames if the pickle files are in a Data folder
 train_matrix = util.openPkl("train_matrix_short.pkl")
 train_labels = util.openPkl("train_labels_short.pkl")
