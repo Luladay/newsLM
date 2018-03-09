@@ -37,19 +37,19 @@ def build_matrices(embed_matrix_filename, vocab_dict_filename, short=True):
 		test_data_filename = "Data/data_test_full.pkl"
 		dev_data_filename = "Data/data_dev_full.pkl"
 
-	# train_matrix, train_labels = build_matrices_helper(train_data_filename, vocab_dict, embed_matrix)
-	# test_matrix, test_labels = build_matrices_helper(test_data_filename, vocab_dict, embed_matrix)
+	train_matrix, train_labels = build_matrices_helper(train_data_filename, vocab_dict, embed_matrix)
+	test_matrix, test_labels = build_matrices_helper(test_data_filename, vocab_dict, embed_matrix)
 	dev_matrix, dev_labels = build_matrices_helper(dev_data_filename, vocab_dict, embed_matrix)
 	
 	
-	# util.dumpVar(train_matrix_pkl + ".pkl", train_matrix)
-	# util.dumpVar(train_labels_pkl + ".pkl", train_labels)
+	util.dumpVar(train_matrix_pkl + ".pkl", train_matrix)
+	util.dumpVar(train_labels_pkl + ".pkl", train_labels)
 
-	# util.dumpVar(test_matrix_pkl + ".pkl", test_matrix)	
-	# util.dumpVar(test_labels_pkl + ".pkl", test_labels)
+	util.dumpVar(test_matrix_pkl + ".pkl", test_matrix)	
+	util.dumpVar(test_labels_pkl + ".pkl", test_labels)
 
-	# util.dumpVar(dev_matrix_pkl + ".pkl", dev_matrix)
-	# util.dumpVar(dev_labels_pkl + ".pkl", dev_labels)
+	util.dumpVar(dev_matrix_pkl + ".pkl", dev_matrix)
+	util.dumpVar(dev_labels_pkl + ".pkl", dev_labels)
 
 
 
@@ -107,8 +107,8 @@ def build_matrices_helper(data_filename, vocab_dict, embed_matrix):
 
 if __name__ == '__main__':
 	build_matrices("embeddings_matrix.pkl", "vocab_dict.pkl")
-	dev_matrix = util.openPkl("dev_matrix_short.pkl")
-	dev_labels = util.openPkl("dev_labels_short.pkl")
+	# dev_matrix = util.openPkl("dev_matrix_short.pkl")
+	# dev_labels = util.openPkl("dev_labels_short.pkl")
 
 
 	# test_matrix = util.openPkl("test_matrix_short.pkl")

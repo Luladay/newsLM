@@ -37,12 +37,10 @@ def run_baseline(data_matrix, data_labels, train=True):
 					_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				else:
 					loss = sess.run(loss_op, feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
-				print loss
-				# if np.isnan(loss):
-				# 	print "input: ", input_placeholder
-				# 	print "labels: ", labels_placeholder
 				loss_list.append(loss)
 			print "=====>loss: " + str(np.mean(loss_list)) + " "
+			if not train:                
+				break
 		
 
 def get_minibatches(data_matrix, data_labels, batch_size):
@@ -67,9 +65,38 @@ def test_minibatches():
 	for tup in batches:
 		print tup
 
+def checkForNans():
+	print "Opening train matrix..."
+	train_matrix = util.openPkl("train_matrix_short.pkl")
+	print "Done opening test matrix!"   
+	for i, row in enumerate(train_matrix):
+		if np.isnan(row).any():
+			print "row num: ", i
+			print "row values: ", row
+			print " "
+			
+	print "Opening test_matrix matrix..."
+	test_matrix = util.openPkl("test_matrix_short.pkl")
+	print "Done opening test matrix!"   
+	for i, row in enumerate(test_matrix):
+		if np.isnan(row).any():
+			print "row num: ", i
+			print "row values: ", row
+			print " "
+
+	print "Opening dev matrix..."
+	dev_matrix = util.openPkl("dev_matrix_short.pkl")
+	print "Done opening dev matrix!"    
+	for i, row in enumerate(dev_matrix):
+		if np.isnan(row).any():
+			print "row num: ", i
+			print "row values: ", row
+			print " "
+
 
 if __name__ == '__main__':
 	# change these filenames if the pickle files are in a Data folder
+
 	# print "Opening train data..."
 	# train_matrix = util.openPkl("train_matrix_short.pkl")
 	# train_labels = util.openPkl("train_labels_short.pkl")
@@ -81,49 +108,11 @@ if __name__ == '__main__':
 	# test_matrix = util.openPkl("test_matrix_short.pkl")
 	# test_labels = util.openPkl("test_labels_short.pkl")
 	# print "Done opening test data!"
-	# batch_list = get_minibatches(test_matrix, test_labels, 1000)
-	# batch_batches = get_minibatches(batch_list[3][0], np.arange(1000), 100)	
-	# batch_problems = get_minibatches(batch_batches[5][0], np.arange(100), 10)
-	# more_batches = get_minibatches(batch_problems[2][0], np.arange(10), 1)
-	
-	# print more_batches[0][0]
-
-	print "Opening train matrix..."
-	train_matrix = util.openPkl("train_matrix_short.pkl")
-	print "Done opening test matrix!"	
-	for i, row in enumerate(train_matrix):
-		if np.isnan(row).any():
-			print "row num: ", i
-			print "row values: ", row
-			print " "
-			
-	# print "Opening test_matrix matrix..."
-	# test_matrix = util.openPkl("test_matrix_short.pkl")
-	# print "Done opening test matrix!"	
-	# for i, row in enumerate(test_matrix):
-	# 	if np.isnan(row).any():
-	# 		print "row num: ", i
-	# 		print "row values: ", row
-	# 		print " "
-
-
-	print "Opening dev matrix..."
-	dev_matrix = util.openPkl("dev_matrix_short.pkl")
-	print "Done opening dev matrix!"	
-	for i, row in enumerate(dev_matrix):
-		if np.isnan(row).any():
-			print "row num: ", i
-			print "row values: ", row
-			print " "
-	
-
-
-
 	# run_baseline(test_matrix, test_labels, train=False)
-
-
 	
-	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_short.pkl")
-	# dev_labels = util.openPkl("dev_labels_short.pkl")
-	# print "Done opening dev data!"
+	
+	print "Opening dev data..."
+	dev_matrix = util.openPkl("dev_matrix_short.pkl")
+	dev_labels = util.openPkl("dev_labels_short.pkl")
+	print "Done opening dev data!"
+	run_baseline(dev_matrix, dev_labels, train=False)
