@@ -1,9 +1,31 @@
 import pickle
 import tensorflow as tf
 import numpy as np
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
 
-#just trying this out
-#just making changeshs
+#Confusion matrix function from PA1, Trying to adapt for our purposes
+def outputConfusionMatrix(features, labels, clf, filename):
+    """ Generate a confusion matrix """
+    pred = clf.predict(features)
+    cm = confusion_matrix(labels, pred, labels=range(5))
+    plt.figure()
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Reds)
+    plt.colorbar()
+    classes = ["- -", "-", "neut", "+", "+ +"]
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes)
+    plt.yticks(tick_marks, classes)
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.savefig(filename)
 # change the filenames if the pickle files are in a Data folder
 train_matrix = util.openPkl("train_matrix_short.pkl")
 train_labels = util.openPkl("train_labels_short.pkl")
