@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
 
 #Confusion matrix function from PA1, Trying to adapt for our purposes
 def outputConfusionMatrix(features, labels, clf, filename):
