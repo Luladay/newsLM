@@ -17,7 +17,8 @@ def outputConfusionMatrix(pred, labels, filename):
     plt.figure()
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Reds)
     plt.colorbar()
-    classes = ["- -", "-", "neut", "+", "+ +"]
+	# order of classes is consitent with create_vocab_embed_matrix.py line 31
+    classes = ["New York Post", "Breitbart", "CNN", "Washington Post", "NPR"]
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes)
     plt.yticks(tick_marks, classes)
@@ -31,6 +32,13 @@ def outputConfusionMatrix(pred, labels, filename):
     plt.xlabel('Predicted label')
     plt.savefig(filename)
 
+#this functionc an be used to test accuracy for train dev and test
+def accuracy(label, pred):
+    """ Precision for classifier """
+    assert(label.shape == pred.shape)
+    return np.sum(label == pred) * 100.0 / pred.size
+
+	
 
 def run_baseline(data_matrix, data_labels, train=True):
 	n_features = util.glove_dimensions
@@ -47,7 +55,6 @@ def run_baseline(data_matrix, data_labels, train=True):
 
 	xW = tf.matmul(input_placeholder, W)
 	pred = tf.transpose(tf.transpose(xW) + b)
-
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
 
@@ -74,7 +81,7 @@ def run_baseline(data_matrix, data_labels, train=True):
 def get_minibatches(data_matrix, data_labels, batch_size):
 	batch_list = []
 	indices = []
-	n_matrix_rows = data_matrix.shape[0]
+	n_matrix_rows = data_matrix.shape[0] #dev or training examples
 	for i in range(0, n_matrix_rows, batch_size):
 		batch = data_matrix[i : i+batch_size, : ]
 		batch_label = data_labels[i : i+batch_size]
