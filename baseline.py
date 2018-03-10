@@ -3,6 +3,34 @@ import tensorflow as tf
 import numpy as np
 import util
 
+# these imports are requiured for the confusion matrix
+import itertools
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
+
+def outputConfusionMatrix(pred, labels, filename):
+    """ Generate a confusion matrix """
+    cm = confusion_matrix(labels, pred, labels=range(5))
+    plt.figure()
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Reds)
+    plt.colorbar()
+    classes = ["- -", "-", "neut", "+", "+ +"]
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes)
+    plt.yticks(tick_marks, classes)
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, cm[i, j],
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.savefig(filename)
+
 
 def run_baseline(data_matrix, data_labels, train=True):
 	n_features = util.glove_dimensions
@@ -21,7 +49,7 @@ def run_baseline(data_matrix, data_labels, train=True):
 	pred = tf.transpose(tf.transpose(xW) + b)
 
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
-	loss_op = tf.reduce_mean(loss_op, 0) 
+	loss_op = tf.reduce_mean(loss_op, 0)
 
 	train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
 
@@ -39,9 +67,9 @@ def run_baseline(data_matrix, data_labels, train=True):
 					loss = sess.run(loss_op, feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				loss_list.append(loss)
 			print "=====>loss: " + str(np.mean(loss_list)) + " "
-			if not train:                
+			if not train:
 				break
-		
+
 
 def get_minibatches(data_matrix, data_labels, batch_size):
 	batch_list = []
@@ -68,16 +96,16 @@ def test_minibatches():
 def checkForNans():
 	print "Opening train matrix..."
 	train_matrix = util.openPkl("train_matrix_short.pkl")
-	print "Done opening test matrix!"   
+	print "Done opening test matrix!"
 	for i, row in enumerate(train_matrix):
 		if np.isnan(row).any():
 			print "row num: ", i
 			print "row values: ", row
 			print " "
-			
+
 	print "Opening test_matrix matrix..."
 	test_matrix = util.openPkl("test_matrix_short.pkl")
-	print "Done opening test matrix!"   
+	print "Done opening test matrix!"
 	for i, row in enumerate(test_matrix):
 		if np.isnan(row).any():
 			print "row num: ", i
@@ -86,7 +114,7 @@ def checkForNans():
 
 	print "Opening dev matrix..."
 	dev_matrix = util.openPkl("dev_matrix_short.pkl")
-	print "Done opening dev matrix!"    
+	print "Done opening dev matrix!"
 	for i, row in enumerate(dev_matrix):
 		if np.isnan(row).any():
 			print "row num: ", i
@@ -109,8 +137,8 @@ if __name__ == '__main__':
 	# test_labels = util.openPkl("test_labels_short.pkl")
 	# print "Done opening test data!"
 	# run_baseline(test_matrix, test_labels, train=False)
-	
-	
+
+
 	print "Opening dev data..."
 	dev_matrix = util.openPkl("dev_matrix_short.pkl")
 	dev_labels = util.openPkl("dev_labels_short.pkl")
