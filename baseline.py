@@ -38,7 +38,7 @@ def accuracy(label, pred):
     assert(label.shape == pred.shape)
     return np.sum(label == pred) * 100.0 / pred.size
 
-	
+
 
 def run_baseline(data_matrix, data_labels, train=True):
 	n_features = util.glove_dimensions
@@ -46,6 +46,7 @@ def run_baseline(data_matrix, data_labels, train=True):
 	batch_size = 1000
 	n_epochs = 30
 	lr = 0.005
+	pred_list = [] # will return the list of predictions for confusion matrix
 
 	input_placeholder = tf.placeholder(tf.float32, shape=(None, n_features))
 	labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
@@ -65,16 +66,29 @@ def run_baseline(data_matrix, data_labels, train=True):
 
 		minibatches = get_minibatches(data_matrix, data_labels, batch_size)
 		for i in range(n_epochs):
+
+
+
+
 			print "Epoch " + str(i+1) + ": "
 			loss_list = []
-			for tup in minibatches:
+			for ii, tup in enumerate(minibatches):
+
 				if train:
 					_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				else:
+						# store the predictions from the last epoch run
+					if (i == n_epochs - 1):
+						if (ii == 0):
+							pred_list = tup[0]
+						else:
+							np.stack(pred_list, tup[0])
+
 					loss = sess.run(loss_op, feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				loss_list.append(loss)
 			print "=====>loss: " + str(np.mean(loss_list)) + " "
 			if not train:
+				return pred_list
 				break
 
 
@@ -150,4 +164,5 @@ if __name__ == '__main__':
 	dev_matrix = util.openPkl("dev_matrix_short.pkl")
 	dev_labels = util.openPkl("dev_labels_short.pkl")
 	print "Done opening dev data!"
-	run_baseline(dev_matrix, dev_labels, train=False)
+	pred_list = run_baseline(dev_matrix, dev_labels, train=False)
+	outputConfusionMatrix(pred_list, dev_labels, confusion_matrix)
