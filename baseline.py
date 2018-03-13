@@ -13,7 +13,12 @@ from sklearn.metrics import confusion_matrix
 
 def outputConfusionMatrix(pred, labels, filename):
     """ Generate a confusion matrix """
-    cm = confusion_matrix(labels, pred, labels=range(5))
+
+    print('size of pred')
+    print(np.shape(pred))
+    print( "size of labels")
+    print(np.shape(labels))
+    cm = confusion_matrix(labels, pred, labels= range(5))
     plt.figure()
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Reds)
     plt.colorbar()
@@ -38,20 +43,18 @@ def accuracy(label, pred):
     assert(label.shape == pred.shape)
     return np.sum(label == pred) * 100.0 / pred.size
 
-
-
 def run_baseline(data_matrix, data_labels, train=True):
 	n_features = util.glove_dimensions
 	n_classes = 5
 	batch_size = 1000
 	n_epochs = 30
 	lr = 0.005
-	pred_list = [] # will return the list of predictions for confusion matrix
 
 	input_placeholder = tf.placeholder(tf.float32, shape=(None, n_features))
 	labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
 
-	W = tf.Variable(tf.zeros([n_features, n_classes], dtype=tf.float32))
+	#W = tf.Variable(tf.zeros([n_features, n_classes], dtype=tf.float32))
+	W = tf.get_variable("W", shape =[n_features, n_classes], dtype=tf.float32, initializer = tf.contrib.layers.xavier_initializer())
 	b = tf.Variable(tf.zeros([n_classes, 1], dtype=tf.float32))
 
 	xW = tf.matmul(input_placeholder, W)
@@ -66,30 +69,26 @@ def run_baseline(data_matrix, data_labels, train=True):
 
 		minibatches = get_minibatches(data_matrix, data_labels, batch_size)
 		for i in range(n_epochs):
-
-
-
-
 			print "Epoch " + str(i+1) + ": "
 			loss_list = []
-			for ii, tup in enumerate(minibatches):
-
+			label_list= []
+			pred_list = []
+			for tup in minibatches:
 				if train:
 					_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				else:
-						# store the predictions from the last epoch run
-					if (i == n_epochs - 1):
-						if (ii == 0):
-							pred_list = tup[0]
-						else:
-							np.stack(pred_list, tup[0])
+					pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 
-					loss = sess.run(loss_op, feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
+					for i, row in enumerate(pred_temp):
+						pred_list.append(np.where(row == max(row))[0][0])
+					for i, row in enumerate(labels_temp):
+						label_list.append(np.where(row == max(row))[0][0])
+
 				loss_list.append(loss)
 			print "=====>loss: " + str(np.mean(loss_list)) + " "
 			if not train:
-				return pred_list
 				break
+	return pred_list, label_list
 
 
 def get_minibatches(data_matrix, data_labels, batch_size):
@@ -146,11 +145,11 @@ def checkForNans():
 if __name__ == '__main__':
 	# change these filenames if the pickle files are in a Data folder
 
-	# print "Opening train data..."
-	# train_matrix = util.openPkl("train_matrix_short.pkl")
-	# train_labels = util.openPkl("train_labels_short.pkl")
-	# print "Done opening training data!"
-	# run_baseline(train_matrix, train_labels)
+	 #print "Opening train data..."
+	 #train_matrix = util.openPkl("train_matrix_short.pkl")
+	 #train_labels = util.openPkl("train_labels_short.pkl")
+	 #print "Done opening training data!"
+	 #run_baseline(train_matrix, train_labels)
 
 
 	# print "Opening test data..."
@@ -164,5 +163,5 @@ if __name__ == '__main__':
 	dev_matrix = util.openPkl("dev_matrix_short.pkl")
 	dev_labels = util.openPkl("dev_labels_short.pkl")
 	print "Done opening dev data!"
-	pred_list = run_baseline(dev_matrix, dev_labels, train=False)
-	outputConfusionMatrix(pred_list, dev_labels, confusion_matrix)
+	pred_list, label_list = run_baseline(dev_matrix, dev_labels, train=False)
+	outputConfusionMatrix(pred_list, label_list, "confusion_matrix")
