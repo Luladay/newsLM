@@ -92,9 +92,7 @@ def build_matrices_helper(data_filename, vocab_dict, embed_matrix):
 				article_avg_vec = np.insert(article_avg_vec, util.glove_dimensions, labels) #add label to end of matrix
 				data_matrix[row_num] = article_avg_vec 
 				row_num += 1
-			num_articles_so_far += 1
-			
-		
+			num_articles_so_far += 1				
 
 	# shuffle matrix bc everything was added in specific order	
 	np.random.shuffle(data_matrix)

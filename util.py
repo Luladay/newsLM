@@ -15,6 +15,8 @@ cnn_label = 2
 wpost_label = 3
 npr_label = 4
 
+short_article_len = 100
+
 
 glove_dimensions = 50
 
