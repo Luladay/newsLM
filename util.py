@@ -28,3 +28,4 @@ def dumpVar(filename, obj):
 def openPkl(filename):
 	var = open(filename, "rb")
 	return pickle.load(var)
+

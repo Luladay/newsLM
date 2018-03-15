@@ -78,7 +78,6 @@ def build_matrices_helper(data_filename, vocab_dict, embed_matrix, article_len):
 						indices.append(vocab_dict[token.lower()])
 					else: # OOV word, map to UNK
 						indices.append(vocab_dict[util.UNK])
-				# print len(indices), indices
 
 				article_vec = np.asarray(indices + (article_len - len(indices)) * [0])
 
@@ -104,12 +103,9 @@ if __name__ == '__main__':
 
 	#if running on full data (not short), change article_len param to be length of longest article
 	build_matrices("embeddings_matrix.pkl", "vocab_dict.pkl", util.short_article_len)
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")
-	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	# print dev_matrix[0]
-	# print dev_labels[0]	
 
-
+	# dev_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	# dev_labels = util.openPkl("train_labels_rnn_short.pkl")
 
 	# test_matrix = util.openPkl("test_matrix_short.pkl")
 	# test_labels = util.openPkl("test_labels_short.pkl")
