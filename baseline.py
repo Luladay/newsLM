@@ -78,7 +78,6 @@ def run_baseline(data_matrix, data_labels, train=True):
 					_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				else:
 					pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
-
 					for i, row in enumerate(pred_temp):
 						pred_list.append(np.where(row == max(row))[0][0])
 					for i, row in enumerate(labels_temp):
