@@ -1,0 +1,163 @@
+Baseline results (train)
+
+Hyperparameters: 
+-Adam Optimizer
+-batch_size = 1000
+-n_epochs = 30
+-lr = 0.005
+
+
+
+Epoch 1:
+=====>loss: 1.6121038
+Epoch 2:
+=====>loss: 1.5485913
+Epoch 3:
+=====>loss: 1.5127009
+Epoch 4:
+=====>loss: 1.4861273
+Epoch 5:
+=====>loss: 1.465362
+Epoch 6:
+=====>loss: 1.4485747
+Epoch 7:
+=====>loss: 1.4346998
+Epoch 8:
+=====>loss: 1.423044
+Epoch 9:
+=====>loss: 1.413125
+Epoch 10:
+=====>loss: 1.4045953
+Epoch 11:
+=====>loss: 1.3971949
+Epoch 12:
+=====>loss: 1.3907263
+Epoch 13:
+=====>loss: 1.3850359
+Epoch 14:
+=====>loss: 1.380002
+Epoch 15:
+=====>loss: 1.375526
+Epoch 16:
+=====>loss: 1.3715284
+Epoch 17:
+=====>loss: 1.367943
+Epoch 18:
+=====>loss: 1.3647152
+Epoch 19:
+=====>loss: 1.3617992
+Epoch 20:
+=====>loss: 1.3591565
+Epoch 21:
+=====>loss: 1.3567538
+Epoch 22:
+=====>loss: 1.3545636
+Epoch 23:
+=====>loss: 1.3525612
+Epoch 24:
+=====>loss: 1.3507265
+Epoch 25:
+=====>loss: 1.349041
+Epoch 26:
+=====>loss: 1.3474892
+Epoch 27:
+=====>loss: 1.3460575
+Epoch 28:
+=====>loss: 1.3447336
+Epoch 29:
+=====>loss: 1.3435074
+Epoch 30:
+=====>loss: 1.3423692
+Epoch 31:
+=====>loss: 1.341311
+Epoch 32:
+=====>loss: 1.3403251
+Epoch 33:
+=====>loss: 1.3394052
+Epoch 34:
+=====>loss: 1.3385453
+Epoch 35:
+=====>loss: 1.3377403
+Epoch 36:
+=====>loss: 1.3369853
+Epoch 37:
+=====>loss: 1.336276
+Epoch 38:
+=====>loss: 1.3356092
+Epoch 39:
+=====>loss: 1.3349806
+Epoch 40:
+=====>loss: 1.3343878
+Epoch 41:
+=====>loss: 1.3338274
+Epoch 42:
+=====>loss: 1.333297
+Epoch 43:
+=====>loss: 1.3327944
+Epoch 44:
+=====>loss: 1.3323175
+Epoch 45:
+=====>loss: 1.331864
+Epoch 46:
+=====>loss: 1.3314325
+Epoch 47:
+=====>loss: 1.3310213
+Epoch 48:
+=====>loss: 1.3306289
+Epoch 49:
+=====>loss: 1.3302537
+Epoch 50:
+=====>loss: 1.3298948
+Epoch 51:
+=====>loss: 1.3295507
+Epoch 52:
+=====>loss: 1.3292208
+Epoch 53:
+=====>loss: 1.3289039
+Epoch 54:
+=====>loss: 1.328599
+Epoch 55:
+=====>loss: 1.3283055
+Epoch 56:
+=====>loss: 1.3280225
+Epoch 57:
+=====>loss: 1.3277491
+Epoch 58:
+=====>loss: 1.3274852
+Epoch 59:
+=====>loss: 1.32723
+Epoch 60:
+=====>loss: 1.3269826
+Epoch 61:
+=====>loss: 1.326743
+Epoch 62:
+=====>loss: 1.3265104
+Epoch 63:
+=====>loss: 1.3262843
+Epoch 64:
+=====>loss: 1.3260646
+Epoch 65:
+=====>loss: 1.3258508
+Epoch 66:
+=====>loss: 1.3256426
+Epoch 67:
+=====>loss: 1.3254395
+Epoch 68:
+=====>loss: 1.3252416
+Epoch 69:
+=====>loss: 1.325048
+Epoch 70:
+=====>loss: 1.3248589
+Final baseline model saved in path: ./models/baseline
+Opening test data...
+Done opening test data!
+Model restored.
+Loss: 1.3801637
+
+Micro F1 score: 42.48%
+Macro F1 score: 37.11%
+F1 score for New York Post:  0.0%
+F1 score for Breitbart:  52.39%
+F1 score for CNN:  48.556%
+F1 score for Washington Post:  39.04%
+F1 score for NPR:  45.582%
