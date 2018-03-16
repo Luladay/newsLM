@@ -2,6 +2,7 @@ import pickle
 import tensorflow as tf
 import numpy as np
 import util
+from decimal import Decimal
 
 # these imports are requiured for the confusion matrix
 import itertools
@@ -10,20 +11,21 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
 
 def outputConfusionMatrix(pred, labels, filename):
     """ Generate a confusion matrix """
 
-    print('size of pred')
-    print(np.shape(pred))
-    print( "size of labels")
-    print(np.shape(labels))
+    # print('size of pred')
+    # print(np.shape(pred))
+    # print( "size of labels")
+    # print(np.shape(labels))
     cm = confusion_matrix(labels, pred, labels= range(5))
     plt.figure()
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Reds)
     plt.colorbar()
 	# order of classes is consitent with create_vocab_embed_matrix.py line 31
-    classes = ["New York Post", "Breitbart", "CNN", "Washington Post", "NPR"]
+    classes = util.classes
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes)
     plt.yticks(tick_marks, classes)
@@ -35,13 +37,20 @@ def outputConfusionMatrix(pred, labels, filename):
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.savefig(filename)
+    plt.savefig(filename)    
 
-#this functionc an be used to test accuracy for train dev and test
-def accuracy(label, pred):
+#this function can be used to test accuracy for train dev and test
+def accuracy(pred, labels):
     """ Precision for classifier """
-    assert(label.shape == pred.shape)
-    return np.sum(label == pred) * 100.0 / pred.size
+    prec = 2
+    micro_f1 = f1_score(labels, pred, average="micro")
+    macro_f1 = f1_score(labels, pred, average="macro")
+    class_f1 = f1_score(labels, pred, average=None)
+    print "Micro F1 score: " + str(round(micro_f1 * 100, prec)) + "%"
+    print "Macro F1 score: " + str(round(macro_f1 * 100, prec)) + "%"
+    for class_name, score in zip(util.classes, class_f1):    	
+    	print "F1 score for " + class_name + ": ", str(round(score*100, 3)) + "%"
+   
 
 def run_baseline(data_matrix, data_labels, train=True):
 	n_features = util.glove_dimensions
@@ -53,7 +62,7 @@ def run_baseline(data_matrix, data_labels, train=True):
 	input_placeholder = tf.placeholder(tf.float32, shape=(None, n_features))
 	labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
 
-	#W = tf.Variable(tf.zeros([n_features, n_classes], dtype=tf.float32))
+
 	W = tf.get_variable("W", shape =[n_features, n_classes], dtype=tf.float32, initializer = tf.contrib.layers.xavier_initializer())
 	b = tf.Variable(tf.zeros([n_classes, 1], dtype=tf.float32))
 
@@ -67,9 +76,10 @@ def run_baseline(data_matrix, data_labels, train=True):
 	with tf.Session() as sess:
 		sess.run(tf.global_variables_initializer())
 
-		minibatches = get_minibatches(data_matrix, data_labels, batch_size)
+		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
 		for i in range(n_epochs):
-			print "Epoch " + str(i+1) + ": "
+			if not train:
+				print "Epoch " + str(i+1) + ": "
 			loss_list = []
 			label_list= []
 			pred_list = []
@@ -90,55 +100,7 @@ def run_baseline(data_matrix, data_labels, train=True):
 	return pred_list, label_list
 
 
-def get_minibatches(data_matrix, data_labels, batch_size):
-	batch_list = []
-	indices = []
-	n_matrix_rows = data_matrix.shape[0] #dev or training examples
-	for i in range(0, n_matrix_rows, batch_size):
-		batch = data_matrix[i : i+batch_size, : ]
-		batch_label = data_labels[i : i+batch_size]
-		batch_list.append((batch, batch_label))
-	return batch_list
 
-def test_minibatches():
-	data_matrix = np.arange(20).reshape((10,2))
-	data_labels = np.arange(10)
-	batch_size = 4
-	print "data_matrix: ", data_matrix
-	print ""
-	print "data_labels: ", data_labels
-	print ""
-	batches = get_minibatches(data_matrix, data_labels, batch_size)
-	for tup in batches:
-		print tup
-
-def checkForNans():
-	print "Opening train matrix..."
-	train_matrix = util.openPkl("train_matrix_short.pkl")
-	print "Done opening test matrix!"
-	for i, row in enumerate(train_matrix):
-		if np.isnan(row).any():
-			print "row num: ", i
-			print "row values: ", row
-			print " "
-
-	print "Opening test_matrix matrix..."
-	test_matrix = util.openPkl("test_matrix_short.pkl")
-	print "Done opening test matrix!"
-	for i, row in enumerate(test_matrix):
-		if np.isnan(row).any():
-			print "row num: ", i
-			print "row values: ", row
-			print " "
-
-	print "Opening dev matrix..."
-	dev_matrix = util.openPkl("dev_matrix_short.pkl")
-	print "Done opening dev matrix!"
-	for i, row in enumerate(dev_matrix):
-		if np.isnan(row).any():
-			print "row num: ", i
-			print "row values: ", row
-			print " "
 
 
 if __name__ == '__main__':
@@ -164,3 +126,4 @@ if __name__ == '__main__':
 	print "Done opening dev data!"
 	pred_list, label_list = run_baseline(dev_matrix, dev_labels, train=False)
 	outputConfusionMatrix(pred_list, label_list, "confusion_matrix")
+	accuracy(pred_list, label_list)
