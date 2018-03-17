@@ -3,6 +3,24 @@ import tensorflow as tf
 import numpy as np
 import util
 from decimal import Decimal
+from datetime import datetime
+import matplotlib.pyplot as py
+
+
+today = datetime.now().strftime("%m-%d, %H:%M")
+
+def generatePlots(x, y, xlabel, ylabel, title):	
+	py.figure(figsize=(10,8))
+
+	py.plot(x, y, color="blue")
+	# py.plot(x, testAccReg, "b--", label='Test Accuracy (Lyrics)')
+	# py.plot(x, trainAccAug, label='Train Accuracy (Lyrics + Audio)', color="red")
+	# py.plot(x, testAccAug, linestyle="--", color="red", label='Test Accuracy (Lyrics + Audio)')
+	# py.figlegend()
+	py.title(title, fontsize="large")
+	py.xlabel(xlabel, fontsize="large")
+	py.ylabel(ylabel, fontsize="large")
+	py.savefig("graphs/" + title + " " + today + ".png", bbox_inches="tight")
 
    
 def build_model(data_matrix, data_labels):
@@ -37,27 +55,40 @@ def build_model(data_matrix, data_labels):
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
-def train(data_matrix, data_labels, save_path, batch_size=100, n_epochs=30):
+def train(data_matrix, data_labels, save_path, title, RESUME=False, batch_size=256, n_epochs=30):
+	if RESUME:
+		tf.reset_default_graph()
 	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels)	
-	saver = tf.train.Saver()
+	saver = tf.train.Saver()	
+	avg_loss_list = []
 	with tf.Session() as sess:
 		sess.run(tf.global_variables_initializer())
+		if RESUME:
+			sess.run(tf.global_variables_initializer())
+			saver.restore(sess, save_path)
+			print("Model restored.")
 
 		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
 		for i in range(n_epochs):
+			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
-			loss_list = []
-			label_list= []
-			pred_list = []
-			for tup in minibatches:				
+			for tup in minibatches:		
 				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
-				loss_list.append(loss)
-			print "=====>loss: " + str(np.mean(loss_list)) + " "		
-		save_path = saver.save(sess, save_path)
+				batch_loss_list.append(loss)
+			avg_loss_list.append(np.mean(batch_loss_list))
+			print "=====>loss: " + str(avg_loss_list[i]) + " "
+			if (i > 0) and (avg_loss_list[i] < avg_loss_list[i-1]):
+				tmp_path = save_path + "--smallest loss"
+				saver.save(sess, tmp_path)
+				print "New min loss at epoch %s! Model saved in path %s" % (str(i+1), tmp_path)
+		saver.save(sess, save_path)
   		print("Final model saved in path: %s" % save_path)
 
+  	generatePlots(range(len(avg_loss_list)), avg_loss_list, "Number of Epochs", "Cross-Entropy Loss", title)
+  	util.dumpVar("losses/ " + title + " " + today + ".pkl" , avg_loss_list)
 
-def test(data_matrix, data_labels, saved_model_path, batch_size=1000):
+
+def test(data_matrix, data_labels, saved_model_path, batch_size=256):
 	tf.reset_default_graph()
 	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
 	saver = tf.train.Saver()
@@ -80,21 +111,20 @@ def test(data_matrix, data_labels, saved_model_path, batch_size=1000):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix")
+	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + today)
 	util.get_accuracy(pred_list, label_list)
-
 
 
 if __name__ == '__main__':
 
-	# print "Opening train data..."
-	# train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	# train_labels = util.openPkl("train_labels_rnn_short.pkl")
-	# print "Done opening train data!"
-	# train(train_matrix, train_labels, "./models/basic_lstm", batch_size=1000, n_epochs=10)
+	print "Opening train data..."
+	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	train_labels = util.openPkl("train_labels_rnn_short.pkl")
+	print "Done opening train data!"
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize300", "Basic LSTM hidden_size 300", RESUME=False, batch_size=256, n_epochs=100)
 
-	print "Opening test data..."
-	dev_matrix = util.openPkl("test_matrix_rnn_short.pkl")	
-	dev_labels = util.openPkl("test_labels_rnn_short.pkl")
-	print "Done opening test data!"
-	test(dev_matrix, dev_labels, "./models/basic_lstm", batch_size=1000)
+	# print "Opening dev data..."
+	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	# print "Done opening dev data!"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm", batch_size=256)
