@@ -1,3 +1,3 @@
-model_checkpoint_path: "basic_lstm_hsize256lr01"
-all_model_checkpoint_paths: "basic_lstm_hsize256lr01--smallest loss"
-all_model_checkpoint_paths: "basic_lstm_hsize256lr01"
+model_checkpoint_path: "basic_lstm_hsize256+10"
+all_model_checkpoint_paths: "basic_lstm_hsize256+10--smallest loss"
+all_model_checkpoint_paths: "basic_lstm_hsize256+10"

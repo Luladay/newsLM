@@ -27,7 +27,7 @@ def build_model(data_matrix, data_labels):
 	n_features = util.glove_dimensions
 	n_classes = 5
 	lr = 0.001
-	hidden_size = 512
+	hidden_size = 256
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -55,7 +55,7 @@ def build_model(data_matrix, data_labels):
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
-def train(data_matrix, data_labels, save_path, title, RESUME=False, batch_size=256, n_epochs=30):
+def train(data_matrix, data_labels, save_path, title, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
 	if RESUME:
 		tf.reset_default_graph()
 	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels)	
@@ -65,7 +65,7 @@ def train(data_matrix, data_labels, save_path, title, RESUME=False, batch_size=2
 		sess.run(tf.global_variables_initializer())
 		if RESUME:
 			sess.run(tf.global_variables_initializer())
-			saver.restore(sess, save_path)
+			saver.restore(sess, saved_model_path)
 			print("Model restored.")
 
 		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
@@ -117,19 +117,20 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 
 if __name__ == '__main__':
 
-	print "Opening train data..."
-	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	train_labels = util.openPkl("train_labels_rnn_short.pkl")
-	print "Done opening train data!"
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize512lr01", "Basic LSTM hidden_size 512 lr01", RESUME=False, batch_size=256, n_epochs=40)
+	# print "Opening train data..."
+	# train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	# train_labels = util.openPkl("train_labels_rnn_short.pkl")
+	# print "Done opening train data!"
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256+10", "Basic LSTM hidden_size 256 +10", 
+	# 	saved_model_path="./models/basic_lstm_hsize256", RESUME=True, batch_size=256, n_epochs=10)
 
-	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	# print "Done opening dev data!"
-	# print "------------"
-	# print "Evaluating model on hsize256"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256--smallest loss", "hsize256", batch_size=256)
+	print "Opening dev data..."
+	dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	print "Done opening dev data!"
+	print "------------"
+	print "Evaluating model on hsize256 lr01 +10"
+	test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256lr01+10--smallest loss", "hsize256lr01+10", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
 	# print "Evaluating model on hsize512"
