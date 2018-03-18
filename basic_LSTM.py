@@ -9,7 +9,7 @@ import matplotlib.pyplot as py
 
 today = datetime.now().strftime("%m-%d, %H:%M")
 
-def generatePlots(x, y, xlabel, ylabel, title):	
+def generatePlots(x, y, xlabel, ylabel, title):
 	py.figure(figsize=(10,8))
 
 	py.plot(x, y, color="blue")
@@ -22,12 +22,13 @@ def generatePlots(x, y, xlabel, ylabel, title):
 	py.ylabel(ylabel, fontsize="large")
 	py.savefig("graphs/" + title + " " + today + ".png", bbox_inches="tight")
 
-   
-def build_model(data_matrix, data_labels):
+
+#since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
+def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
 	n_classes = 5
-	lr = 0.001
-	hidden_size = 256
+	# lr = 0.001
+	# hidden_size = 256
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -42,11 +43,12 @@ def build_model(data_matrix, data_labels):
 	# build model
 	U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	b = tf.get_variable("b", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
-    
-	rnn_cell = tf.nn.rnn_cell.BasicRNNCell(hidden_size)
-	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
-	pred = tf.matmul(final_state, U) + b
 
+	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
+	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
+
+	h = final_state[1]
+	pred = tf.matmul(h, U) + b
 
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
@@ -55,24 +57,24 @@ def build_model(data_matrix, data_labels):
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
-def train(data_matrix, data_labels, save_path, title, RESUME=False, batch_size=256, n_epochs=30):
+def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
 	if RESUME:
 		tf.reset_default_graph()
-	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels)	
-	saver = tf.train.Saver()	
+	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels, hidden_size=hidden_size, lr=lr)
+	saver = tf.train.Saver()
 	avg_loss_list = []
 	with tf.Session() as sess:
 		sess.run(tf.global_variables_initializer())
 		if RESUME:
 			sess.run(tf.global_variables_initializer())
-			saver.restore(sess, save_path)
+			saver.restore(sess, saved_model_path)
 			print("Model restored.")
 
 		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
 		for i in range(n_epochs):
 			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
-			for tup in minibatches:		
+			for tup in minibatches:
 				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				batch_loss_list.append(loss)
 			avg_loss_list.append(np.mean(batch_loss_list))
@@ -88,7 +90,7 @@ def train(data_matrix, data_labels, save_path, title, RESUME=False, batch_size=2
   	util.dumpVar("losses/ " + title + " " + today + ".pkl" , avg_loss_list)
 
 
-def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
+def test(data_matrix, data_labels, saved_model_path, title):
 	tf.reset_default_graph()
 	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
 	saver = tf.train.Saver()
@@ -109,7 +111,7 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 				label_list.append(np.where(row == max(row))[0][0])
 
 			loss_list.append(loss)
-		print "Loss: " + str(np.mean(loss_list)) + "\n"			
+		print "Loss: " + str(np.mean(loss_list)) + "\n"
 
 	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
@@ -121,17 +123,35 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hidden_size 256 lr01", RESUME=False, batch_size=256, n_epochs=40)
+	print ">>>>Hidden size"
+	print "Running experiment 1..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01",
+		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
+	print "Running experiment 2..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01",
+		hidden_size=300, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
+	print "Running experiment 3..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01",
+		hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
+	print ">>>>Learning rate"
+	print "Running experiment 1..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01",
+		hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
+	print "Running experiment 2..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01",
+		hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
+	print "Running experiment 3..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01",
+		hidden_size=512, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
 
 	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")
 	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
 	# print "Done opening dev data!"
 	# print "------------"
-	# print "Evaluating model on hsize256"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256--smallest loss", "hsize256", batch_size=256)
+	# print "Evaluating model on hsize256 lr01 +10"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256lr01+10--smallest loss", "hsize256lr01+10", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
 	# print "Evaluating model on hsize512"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512--smallest loss", "hsize512", batch_size=256)
-

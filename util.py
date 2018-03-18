@@ -18,7 +18,6 @@ bart = "Breitbart_articles"
 cnn = "CNN_articles"
 wpost = "Washington_Post_articles"
 npr = "NPR_articles"
-
 classes = ["New York Post", "Breitbart", "CNN", "Washington Post", "NPR"]
 
 ####### Variables #######
@@ -34,24 +33,6 @@ glove_dimensions = 50
 
 # how many words are in embedding_matrix/ how many glove vectors we have
 vocab_size = 62801
-
-####### Map from glove vector to number ################
-'''
-this function is used to create a dictionary mapping a word to a number. The label_input placeholder
-tensor must be of length vocab size, as the model will output after each word
-the probability distribution of each word.
-
-ex: the word and is the 5th word in the glove_vectors, thus true_label
-	would be [0 0 0 0 1..........0 0....0]
-
-	the model would output a probability distribution over each word
-	[.01 .... .05......0......]
-	the model will use these two vectors to calculate the loss of the model
-'''
-
-
-
-
 
 
 ######## Useful Functions #######

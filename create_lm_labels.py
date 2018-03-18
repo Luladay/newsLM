@@ -11,13 +11,41 @@ have 100 rows and size(vocab_dict) columns
 
 this is needed to calculate the loss in the language model LSTM
 '''
+vocab_dict = util.openPkl("vocab_dict.pkl")
 
+def create_lm_labels(data, filename):
 
-#def create_lm_labels(data, ):
+    print "Opening data..."
+    dict_data = util.openPkl(data)
+    print "Done opening data!"
+    article_names = [util.nypost, util.bart, util.cnn, util.wpost, util.npr ]
+    list_indexes = []
+    for names in article_names:
+        for articles in dict_data[names]:
+            for word in articles:
+                if word not in vocab_dict:
+                    list_indexes.append(0)
+                else:
+                    list_indexes.append(vocab_dict[word])
+    # the following lines place a 1 at row  i of the matrix
+    #wherever list_index(i) is.
+    matrix = np.zeros((len(list_indexes), util.vocab_size))
+    matrix[np.arange(len(list_indexes)), list_indexes] = 1
+    util.dumpVar(filename, matrix)
 
-
-
+            #let's create the labels matrix for the train data
 
 
 
 if __name__ == "__main__":
+    print "creating train lm labels..."
+    create_lm_labels('data_train_short.pkl', 'train_lm_labels.pkl')
+    print "done creating train lm labels!"
+
+    print "creating dev lm labels..."
+    create_lm_labels('data_dev_short.pkl', 'dev_lm_labels.pkl')
+    print "done creating dev lm labels!"
+
+    print "creating test lm labels..."
+    create_lm_labels('data_test_short.pkl', 'test_lm_labels.pkl')
+    print "done creating test lm labels!"
