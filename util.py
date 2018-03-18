@@ -32,6 +32,27 @@ npr_label = 4
 short_article_len = 100
 glove_dimensions = 50
 
+# how many words are in embedding_matrix/ how many glove vectors we have
+vocab_size = 62801
+
+####### Map from glove vector to number ################
+'''
+this function is used to create a dictionary mapping a word to a number. The label_input placeholder
+tensor must be of length vocab size, as the model will output after each word
+the probability distribution of each word.
+
+ex: the word and is the 5th word in the glove_vectors, thus true_label
+	would be [0 0 0 0 1..........0 0....0]
+
+	the model would output a probability distribution over each word
+	[.01 .... .05......0......]
+	the model will use these two vectors to calculate the loss of the model
+'''
+
+
+
+
+
 
 ######## Useful Functions #######
 
@@ -42,6 +63,7 @@ def dumpVar(filename, obj):
 def openPkl(filename):
 	var = open(filename, "rb")
 	return pickle.load(var)
+
 
 def get_minibatches(data_matrix, data_labels, batch_size):
 	batch_list = []
@@ -74,7 +96,7 @@ def outputConfusionMatrix(pred, labels, filename):
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.savefig(filename)    
+    plt.savefig(filename)
 
 #this function can be used to test accuracy for train dev and test
 def get_accuracy(pred, labels):
@@ -85,7 +107,7 @@ def get_accuracy(pred, labels):
     class_f1 = f1_score(labels, pred, average=None)
     print "Micro F1 score: " + str(round(micro_f1 * 100, prec)) + "%"
     print "Macro F1 score: " + str(round(macro_f1 * 100, prec)) + "%"
-    for class_name, score in zip(classes, class_f1):    	
+    for class_name, score in zip(classes, class_f1):
     	print "F1 score for " + class_name + ": ", str(round(score*100, 3)) + "%"
 
 
@@ -129,4 +151,3 @@ def test_minibatches():
 	batches = get_minibatches(data_matrix, data_labels, batch_size)
 	for tup in batches:
 		print tup
-
