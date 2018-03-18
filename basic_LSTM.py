@@ -27,8 +27,6 @@ def generatePlots(x, y, xlabel, ylabel, title):
 def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
 	n_classes = 5
-	# lr = 0.001
-	# hidden_size = 256
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -58,8 +56,7 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 
 
 def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
-	if RESUME:
-		tf.reset_default_graph()
+	tf.reset_default_graph()
 	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels, hidden_size=hidden_size, lr=lr)	
 	saver = tf.train.Saver()	
 	avg_loss_list = []
@@ -86,11 +83,11 @@ def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001,
 		saver.save(sess, save_path)
   		print("Final model saved in path: %s" % save_path)
 
-  	generatePlots(range(len(avg_loss_list)), avg_loss_list, "Number of Epochs", "Cross-Entropy Loss", title)
   	util.dumpVar("losses/ " + title + " " + today + ".pkl" , avg_loss_list)
+  	generatePlots(range(len(avg_loss_list)), avg_loss_list, "Number of Epochs", "Cross-Entropy Loss", title)
 
 
-def test(data_matrix, data_labels, saved_model_path, title):
+def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 	tf.reset_default_graph()
 	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
 	saver = tf.train.Saver()
@@ -124,33 +121,33 @@ if __name__ == '__main__':
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
 	print ">>>>Hidden size"
-	print "Running experiment 1..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
-	print "Running experiment 2..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01", 
-		hidden_size=300, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
-	print "Running experiment 3..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
-		hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
-	print ">>>>Learning rate"
-	print "Running experiment 1..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-		hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
-	print "Running experiment 2..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01", 
-		hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
-	print "Running experiment 3..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
-		hidden_size=512, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
+	# print "Running experiment 1..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
+	# 	hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
+	# print "Running experiment 2..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01", 
+	# 	hidden_size=300, lr=0.001, RESUME=False, batch_size=256, n_epochs=45)
+	# print "Running experiment 3..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
+	# 	hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=45)
+	# print ">>>>Learning rate"
+	# print "Running experiment 1..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
+	# 	hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=45)
+	# print "Running experiment 2..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01", 
+	# 	hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=45)
+	# print "Running experiment 3..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
+	# 	hidden_size=512, lr=0.005, RESUME=False, batch_size=256, n_epochs=45)
 
-	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	# print "Done opening dev data!"
-	# print "------------"
-	# print "Evaluating model on hsize256 lr01 +10"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256lr01+10--smallest loss", "hsize256lr01+10", batch_size=256)
+	print "Opening dev data..."
+	dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	print "Done opening dev data!"
+	print "------------"
+	print "Evaluating model on hsize256 lr01 +10"
+	test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256 lr01--smallest loss", "Basic LSTM hsize256 lr01", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
 	# print "Evaluating model on hsize512"
