@@ -43,10 +43,11 @@ def build_model(data_matrix, data_labels):
 	U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	b = tf.get_variable("b", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
     
-	rnn_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size)
+	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
-	pred = tf.matmul(final_state, U) + b
 
+	h = final_state[1]
+	pred = tf.matmul(h, U) + b
 
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
@@ -121,8 +122,8 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hsize256", 
-		RESUME=False, batch_size=256, n_epochs=100)
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
+		RESUME=False, batch_size=256, n_epochs=60)
 
 	# print "Opening dev data..."
 	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
