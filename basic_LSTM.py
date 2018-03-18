@@ -26,7 +26,7 @@ def generatePlots(x, y, xlabel, ylabel, title):
 def build_model(data_matrix, data_labels):
 	n_features = util.glove_dimensions
 	n_classes = 5
-	lr = 0.005
+	lr = 0.001
 	hidden_size = 256
 
 	# add placeholders
@@ -117,21 +117,21 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 
 if __name__ == '__main__':
 
-	# print "Opening train data..."
-	# train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	# train_labels = util.openPkl("train_labels_rnn_short.pkl")
-	# print "Done opening train data!"
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hidden_size 256", RESUME=False, batch_size=256, n_epochs=40)
+	print "Opening train data..."
+	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	train_labels = util.openPkl("train_labels_rnn_short.pkl")
+	print "Done opening train data!"
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hidden_size 256 lr01", RESUME=False, batch_size=256, n_epochs=40)
 
-	print "Opening dev data..."
-	dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	print "Done opening dev data!"
-	print "------------"
+	# print "Opening dev data..."
+	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	# print "Done opening dev data!"
+	# print "------------"
 	# print "Evaluating model on hsize256"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256--smallest loss", "hsize256", batch_size=256)
-	print "Evaluating model on hsize300"
-	test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
+	# print "Evaluating model on hsize300"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
 	# print "Evaluating model on hsize512"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512--smallest loss", "hsize512", batch_size=256)
 
