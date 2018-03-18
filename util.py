@@ -81,6 +81,13 @@ def outputConfusionMatrix(pred, labels, filename):
 def get_accuracy(pred, labels):
     """ Precision for classifier """
     prec = 2
+    non_matching = 0
+    for tup in zip(pred, labels):
+    	if tup[0] != tup[1]:
+    		non_matching += 1
+    accuracy = non_matching / float(len(pred))
+    print "Accuracy: " + str(round(accuracy * 100, prec)) + "%"
+
     micro_f1 = f1_score(labels, pred, average="micro")
     macro_f1 = f1_score(labels, pred, average="macro")
     class_f1 = f1_score(labels, pred, average=None)
@@ -131,3 +138,7 @@ def test_minibatches():
 	for tup in batches:
 		print tup
 
+if __name__ == '__main__':
+	a = [0,1,2,3,4]
+	b = [1,1,2,4,1]
+	get_accuracy(a,b)
