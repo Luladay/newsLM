@@ -117,20 +117,20 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 
 if __name__ == '__main__':
 
-	# print "Opening train data..."
-	# train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	# train_labels = util.openPkl("train_labels_rnn_short.pkl")
-	# print "Done opening train data!"
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256+10", "Basic LSTM hidden_size 256 +10", 
-	# 	saved_model_path="./models/basic_lstm_hsize256", RESUME=True, batch_size=256, n_epochs=10)
+	print "Opening train data..."
+	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	train_labels = util.openPkl("train_labels_rnn_short.pkl")
+	print "Done opening train data!"
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize256+10", "Basic LSTM hidden_size 256 +10", 
+		saved_model_path="./models/basic_lstm_hsize256", RESUME=True, batch_size=256, n_epochs=10)
 
-	print "Opening dev data..."
-	dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	print "Done opening dev data!"
-	print "------------"
-	print "Evaluating model on hsize256 lr01 +10"
-	test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256lr01+10--smallest loss", "hsize256lr01+10", batch_size=256)
+	# print "Opening dev data..."
+	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	# print "Done opening dev data!"
+	# print "------------"
+	# print "Evaluating model on hsize256 lr01 +10"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256lr01+10--smallest loss", "hsize256lr01+10", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
 	# print "Evaluating model on hsize512"

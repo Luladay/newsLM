@@ -54,6 +54,7 @@ def get_minibatches(data_matrix, data_labels, batch_size):
 	return batch_list
 
 
+
 def outputConfusionMatrix(pred, labels, filename):
     """ Generate a confusion matrix """
 
