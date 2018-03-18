@@ -23,11 +23,12 @@ def generatePlots(x, y, xlabel, ylabel, title):
 	py.savefig("graphs/" + title + " " + today + ".png", bbox_inches="tight")
 
    
-def build_model(data_matrix, data_labels):
+#since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
+def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
 	n_classes = 5
-	lr = 0.001
-	hidden_size = 256
+	# lr = 0.001
+	# hidden_size = 256
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -56,10 +57,10 @@ def build_model(data_matrix, data_labels):
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
-def train(data_matrix, data_labels, save_path, title, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
+def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
 	if RESUME:
 		tf.reset_default_graph()
-	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels)	
+	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels, hidden_size=hidden_size, lr=lr)	
 	saver = tf.train.Saver()	
 	avg_loss_list = []
 	with tf.Session() as sess:
@@ -89,7 +90,7 @@ def train(data_matrix, data_labels, save_path, title, saved_model_path=None, RES
   	util.dumpVar("losses/ " + title + " " + today + ".pkl" , avg_loss_list)
 
 
-def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
+def test(data_matrix, data_labels, saved_model_path, title):
 	tf.reset_default_graph()
 	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
 	saver = tf.train.Saver()
@@ -122,8 +123,15 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
+	print "Running experiment 1..."
 	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-		RESUME=False, batch_size=256, n_epochs=60)
+		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=60)
+	print "Running experiment 2..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01", 
+		hidden_size=300, lr=0.001, RESUME=False, batch_size=256, n_epochs=60)
+	print "Running experiment 3..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
+		hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=60)
 
 	# print "Opening dev data..."
 	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
