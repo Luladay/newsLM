@@ -27,7 +27,7 @@ def build_model(data_matrix, data_labels):
 	n_features = util.glove_dimensions
 	n_classes = 5
 	lr = 0.001
-	hidden_size = 256
+	hidden_size = 512
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hidden_size 256 lr01", RESUME=False, batch_size=256, n_epochs=40)
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize512lr01", "Basic LSTM hidden_size 512 lr01", RESUME=False, batch_size=256, n_epochs=40)
 
 	# print "Opening dev data..."
 	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
