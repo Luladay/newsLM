@@ -88,7 +88,7 @@ def train(data_matrix, data_labels, save_path, title, RESUME=False, batch_size=2
   	util.dumpVar("losses/ " + title + " " + today + ".pkl" , avg_loss_list)
 
 
-def test(data_matrix, data_labels, saved_model_path, batch_size=256):
+def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 	tf.reset_default_graph()
 	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
 	saver = tf.train.Saver()
@@ -111,20 +111,27 @@ def test(data_matrix, data_labels, saved_model_path, batch_size=256):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + today)
+	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
 
 
 if __name__ == '__main__':
 
-	print "Opening train data..."
-	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	train_labels = util.openPkl("train_labels_rnn_short.pkl")
-	print "Done opening train data!"
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hidden_size 256", RESUME=False, batch_size=256, n_epochs=40)
+	# print "Opening train data..."
+	# train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	# train_labels = util.openPkl("train_labels_rnn_short.pkl")
+	# print "Done opening train data!"
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256", "Basic LSTM hidden_size 256", RESUME=False, batch_size=256, n_epochs=40)
 
-	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	# print "Done opening dev data!"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm", batch_size=256)
+	print "Opening dev data..."
+	dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	print "Done opening dev data!"
+	print "------------"
+	# print "Evaluating model on hsize256"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256--smallest loss", "hsize256", batch_size=256)
+	print "Evaluating model on hsize300"
+	test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
+	# print "Evaluating model on hsize512"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512--smallest loss", "hsize512", batch_size=256)
+
