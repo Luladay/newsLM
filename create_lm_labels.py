@@ -29,9 +29,11 @@ def create_lm_labels(data, filename):
                     list_indexes.append(vocab_dict[word])
     # the following lines place a 1 at row  i of the matrix
     #wherever list_index(i) is.
+    '''
     matrix = np.zeros((len(list_indexes), util.vocab_size))
     matrix[np.arange(len(list_indexes)), list_indexes] = 1
-    util.dumpVar(filename, matrix)
+    '''
+    util.dumpVar(filename, list_indexes)
 
             #let's create the labels matrix for the train data
 
