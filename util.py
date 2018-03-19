@@ -35,6 +35,7 @@ glove_dimensions = 50
 
 # how many words are in embedding_matrix/ how many glove vectors we have
 vocab_size = 62801
+EOS_index = vocab_size
 
 
 ######## Useful Functions #######
@@ -57,18 +58,31 @@ def get_minibatches(data_matrix, data_labels, batch_size):
 		batch_list.append((batch, batch_label))
 	return batch_list
 
+def get_minibatches_seq(data_matrix, batch_size):
+	batch_list = []
+	indices = []
+	n_matrix_rows = data_matrix.shape[0] #dev or training examples
+	n_matrix_cols = data_matrix.shape[1]
+	for i in range(0, n_matrix_rows, batch_size):
+		batch_data = data_matrix[i : i+batch_size, : ]
+		batch = np.insert(batch_data, n_matrix_cols, EOS_index, axis=1)
+		# batch_label = data_matrix[i : i+batch_size, 1 : ]
+		batch_label = np.insert(batch_data, 0, EOS_index, axis=1)
+		batch_list.append((batch, batch_label))
+	return batch_list
+
 def get_minibatches_lm(data_matrix, batch_size):
 	batch_list = []
 	indices = []
 	n_matrix_rows = data_matrix.shape[0] #dev or training examples
 	n_matrix_cols = data_matrix.shape[1]
 	for i in range(0, n_matrix_rows, batch_size):
-		batch = data_matrix[i : i+batch_size, : n_matrix_cols-1]
+		batch_data = data_matrix[i : i+batch_size, : ]
+		# batch = np.insert(batch_data, n_matrix_cols, EOS_index, axis=1)
 		batch_label = data_matrix[i : i+batch_size, 1 : ]
-		batch_list.append((batch, batch_label))
+		batch_label = np.insert(batch_data, n_matrix_cols, EOS_index, axis=1)
+		batch_list.append((batch_data, batch_label))
 	return batch_list
-
-
 
 def outputConfusionMatrix(pred, labels, filename):
     """ Generate a confusion matrix """
@@ -143,9 +157,9 @@ def test_minibatches():
 	batch_size = 2
 	print "data_matrix: ", data_matrix
 	print ""
-	print "data_labels: ", data_labels
-	print ""
-	batches = get_minibatches(data_matrix, data_labels, batch_size)
+	# print "data_labels: ", data_labels
+	# print ""
+	batches = get_minibatches_lm(data_matrix, batch_size)
 	for tup in batches:
 		print "batch data", tup[0]
 		print "batch label", tup[1]

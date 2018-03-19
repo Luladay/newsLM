@@ -1,3 +1,3 @@
-model_checkpoint_path: "basic_lstm_cell drop08"
-all_model_checkpoint_paths: "basic_lstm_cell drop08--smallest loss"
-all_model_checkpoint_paths: "basic_lstm_cell drop08"
+model_checkpoint_path: "basic_lstm_gradclip 1"
+all_model_checkpoint_paths: "basic_lstm_gradclip 1--smallest loss"
+all_model_checkpoint_paths: "basic_lstm_gradclip 1"

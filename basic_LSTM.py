@@ -27,6 +27,7 @@ def generatePlots(x, y, xlabel, ylabel, title):
 def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
 	n_classes = 5
+	max_grad_norm = 5.
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -37,14 +38,13 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	embed_matrix = util.openPkl("embeddings_matrix.pkl")
 	print "Done opening embedding matrix!"
 	x = tf.nn.embedding_lookup(embed_matrix, input_placeholder)
-	x = tf.nn.dropout(x, 0.8)
 
 	# build model
 	U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	b = tf.get_variable("b", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
     
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
-	# rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.5)
+	rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.8)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
 	h = final_state[1]
@@ -53,7 +53,12 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
 
-	train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
+	params = tf.trainable_variables()
+	gradients = tf.gradients(loss_op, params)
+	clippied_gradients, _ = tf.clip_by_global_norm(gradients, max_grad_norm)
+	optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+	train_op = optimizer.apply_gradients(zip(clippied_gradients, params))
+	# train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
@@ -124,11 +129,11 @@ if __name__ == '__main__':
 	print "Done opening train data!"
 	# print "Running experiment 1..."
 	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-		# hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
+	# 	hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
 
-	# print "Running experiment"
-	# train(train_matrix, train_labels, "./models/basic_lstm_cell drop08", "Basic LSTM cell drop08", 
-	# 	hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=20)	
+	print "Running experiment"
+	train(train_matrix, train_labels, "./models/basic_lstm_gradclip 1", "Basic LSTM grad clip 1", 
+		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=20)	
 
 	print "Opening dev data..."
 	dev_matrix = util.openPkl("train_matrix_rnn_short.pkl")	
@@ -139,7 +144,7 @@ if __name__ == '__main__':
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_cell drop08--smallest loss", "Basic LSTM cell drop08", batch_size=256)
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_drop05--smallest loss", "Basic LSTM drop05", batch_size=256)
 	# print "Evaluating model drop08"
-	test(dev_matrix, dev_labels, "./models/basic_lstm_drop08--smallest loss", "Basic LSTM drop08", batch_size=256)
+	test(dev_matrix, dev_labels, "./models/basic_lstm_gradclip 1--smallest loss", "Basic LSTM grad clip 1", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 lr05--smallest loss", "Basic LSTM hsize300 lr05", batch_size=256)
 	# print "Evaluating model on hsize512"
