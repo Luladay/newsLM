@@ -24,14 +24,14 @@ def generatePlots(x, y, xlabel, ylabel, title):
 
 
 #since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
-def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
+def build_model(data_matrix, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
-	n_classes = util.vocab_size
+	n_classes = util.vocab_size #7k
 	# lr = 0.001
 	# hidden_size = 256
 
 	# add placeholders
-	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
+	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len - 1))
 	labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
 
 	# add embedding layer!
@@ -46,12 +46,12 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	b1 = tf.get_variable("b1", shape=[1, hidden_size], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
 
 	Wh = tf.get_variable("Wh", shape = [ hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
-	We = tf.get_variable("We", shape = [hidden_size, n_features], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
+	#We = tf.get_variable("We", shape = [hidden_size, n_features], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
-	h = tf.signmoid( tf.matmul(Wh, final_state[1]) + tf.matmul(We, x) + b1)
-	pred = tf.matmul(h, U) + b
+	h = tf.sigmoid( tf.matmul(Wh, final_state[1])  + b1)
+	pred = tf.matmul(h, U) + b2
 
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
@@ -60,10 +60,10 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
-def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
+def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
 	if RESUME:
 		tf.reset_default_graph()
-	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, data_labels, hidden_size=hidden_size, lr=lr)
+	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix,  hidden_size=hidden_size, lr=lr)
 	saver = tf.train.Saver()
 	avg_loss_list = []
 	with tf.Session() as sess:
@@ -73,12 +73,15 @@ def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001,
 			saver.restore(sess, saved_model_path)
 			print("Model restored.")
 
-		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
+		minibatches = util.get_minibatches_lm(data_matrix, batch_size)
 		for i in range(n_epochs):
 			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
 			for tup in minibatches:
-				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
+				label_data = np.zeros((batch_size, util.vocab_size))
+				label_data[np.arange(batch_size), tup[1]] = 1
+
+				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: label_data})
 				batch_loss_list.append(loss)
 			avg_loss_list.append(np.mean(batch_loss_list))
 			print "=====>loss: " + str(avg_loss_list[i]) + " "
@@ -93,7 +96,7 @@ def train(data_matrix, data_labels, save_path, title, hidden_size=256, lr=0.001,
   	util.dumpVar("losses/ " + title + " " + today + ".pkl" , avg_loss_list)
 
 
-def test(data_matrix, data_labels, saved_model_path, title):
+def test(data_matrix, saved_model_path, title):
 	tf.reset_default_graph()
 	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
 	saver = tf.train.Saver()
@@ -105,9 +108,12 @@ def test(data_matrix, data_labels, saved_model_path, title):
 		saver.restore(sess, saved_model_path)
 		print("Model restored.")
 
-		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
+		minibatches = util.get_minibatches_lm(data_matrix,  batch_size)
 		for tup in minibatches:
-			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
+			label_data = np.zeros((batch_size, util.vocab_size))
+			label_data[np.arange(batch_size), tup[1]] = 1
+
+			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: label_data})
 			for i, row in enumerate(pred_temp):
 				pred_list.append(np.where(row == max(row))[0][0])
 			for i, row in enumerate(labels_temp):
@@ -116,7 +122,7 @@ def test(data_matrix, data_labels, saved_model_path, title):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
+	#util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
 
 
@@ -124,25 +130,27 @@ if __name__ == '__main__':
 
 	print "Opening train data..."
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	train_labels = util.openPkl("train_labels_rnn_short.pkl")
+	#train_labels = util.openPkl("train_lm_labels.pkl")
 	print "Done opening train data!"
 	print ">>>>Hidden size"
 	print "Running experiment 1..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01",
+	train(train_matrix, "./models/lm_lstm_hsize256 lr01", "LM LSTM hsize256 lr01",
 		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
+		'''
 	print "Running experiment 2..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01",
+	train(train_matrix, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01",
 		hidden_size=300, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
 	print "Running experiment 3..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01",
+	train(train_matrix, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01",
 		hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
 	print ">>>>Learning rate"
 	print "Running experiment 1..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01",
+	train(train_matrix, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01",
 		hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
 	print "Running experiment 2..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01",
+	train(train_matrix,"./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01",
 		hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
 	print "Running experiment 3..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01",
+	train(train_matrix, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01",
 		hidden_size=512, lr=0.005, RESUME=False, batch_size=256, n_epochs=40)
+		'''

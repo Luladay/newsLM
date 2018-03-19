@@ -56,6 +56,17 @@ def get_minibatches(data_matrix, data_labels, batch_size):
 		batch_list.append((batch, batch_label))
 	return batch_list
 
+def get_minibatches_lm(data_matrix, batch_size):
+	batch_list = []
+	indices = []
+	n_matrix_rows = data_matrix.shape[0] #dev or training examples
+	for i in range(0, n_matrix_rows, batch_size):
+		batch = data_matrix[i : i+batch_size, 0:99]
+		batch_label = (data_matrix[i : i + batch_size, -1]).astype(int)
+		batch_list.append((batch, batch_label))
+	return batch_list
+
+
 
 def outputConfusionMatrix(pred, labels, filename):
     """ Generate a confusion matrix """
