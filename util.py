@@ -32,6 +32,9 @@ npr_label = 4
 short_article_len = 100
 glove_dimensions = 50
 
+# how many words are in embedding_matrix/ how many glove vectors we have
+vocab_size = 62801
+
 
 ######## Useful Functions #######
 
