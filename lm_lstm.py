@@ -26,13 +26,13 @@ def generatePlots(x, y, xlabel, ylabel, title):
 #since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
 def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
-	n_classes = util.vocab_size #7k
+	n_classes = util.short_article_len-1 #7k
 	# lr = 0.001
 	# hidden_size = 256
 
 	# add placeholders
-	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
-	labels_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
+	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len-1))
+	labels_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len-1))
 
 	# add embedding layer!
 	print "Opening embedding matrix..."
@@ -40,20 +40,26 @@ def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	print "Done opening embedding matrix!"
 	x = tf.nn.embedding_lookup(embed_matrix, input_placeholder)
 	print "x: ", x.shape
-	assert(not True)
 
 	# build model
 	U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	b2 = tf.get_variable("b2", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
-	b1 = tf.get_variable("b1", shape=[1, hidden_size], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
+	# b1 = tf.get_variable("b1", shape=[1, hidden_size], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
 
-	Wh = tf.get_variable("Wh", shape = [hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
+	# Wh = tf.get_variable("Wh", shape = [hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	#We = tf.get_variable("We", shape = [hidden_size, n_features], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
+	# inputs = tf.unstack(x, num=util.short_article_len-1, axis=1)
+	# print "inputs: ", inputs.shape
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
-	print "Wh: ", Wh.shape
-	h = tf.sigmoid(tf.matmul(outputs, Wh)  + b1)
+	print "outputs: ", outputs.shape
+	print "outputs[:-1:] ", outputs[:, -1, :].shape
+	print "final_state[0]: ", final_state[0].shape
+	print "final_state[1]: ", final_state[1].shape
+	# assert(outputs[:, -1, :] == final_state[1])
+	# print "Wh: ", Wh.shape
+	# h = tf.sigmoid(tf.matmul(final_state[1], Wh)  + b1)
 	# print "input_placeholder: ", input_placeholder.shape
 	# print "labels_placeholder: ", labels_placeholder
 	# print "final state(h): ", final_state[1].shape
@@ -62,14 +68,13 @@ def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	# print "h: ", h.shape
 	# print "pred: ", pred.shape
 
-	# if train:		
+	# if train:	
 	# 	loss_op = tf.nn.sampled_softmax_loss(weights=tf.transpose(U), biases=b2, labels=labels_placeholder, inputs=h, num_sampled=100, num_classes=util.vocab_size)
-	# 	# sampled_values=tf.nn.uniform_candidate_sampler(labels_placeholder, ))
 	# else:
-	pred = tf.matmul(h, U) + b2
-	weights = np.ones((1, util.short_article_len))
-	loss_op = tf.contrib.legacy_seq2seq.sequence_loss_by_example(h, labels_placeholder, weights)
-	# loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
+	pred = tf.matmul(final_state[1], U) + b2
+	# weights = np.ones((1, util.short_article_len))
+	# loss_op = tf.contrib.legacy_seq2seq.sequence_loss_by_example(h, labels_placeholder, weights)
+	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
 
 	train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)

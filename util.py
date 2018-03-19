@@ -50,8 +50,9 @@ def get_minibatches(data_matrix, data_labels, batch_size):
 	batch_list = []
 	indices = []
 	n_matrix_rows = data_matrix.shape[0] #dev or training examples
+	n_matrix_cols = data_matrix.shape[1]
 	for i in range(0, n_matrix_rows, batch_size):
-		batch = data_matrix[i : i+batch_size, : ]
+		batch = data_matrix[i : i+batch_size, : n_matrix_cols-1]
 		batch_label = data_labels[i : i+batch_size]
 		batch_list.append((batch, batch_label))
 	return batch_list
@@ -60,10 +61,11 @@ def get_minibatches_lm(data_matrix, batch_size):
 	batch_list = []
 	indices = []
 	n_matrix_rows = data_matrix.shape[0] #dev or training examples
+	n_matrix_cols = data_matrix.shape[1]
 	for i in range(0, n_matrix_rows, batch_size):
-		batch = data_matrix[i : i+batch_size, :]
-		batch_label = batch[:, 1:]
-		batch_label = np.column_stack((batch_label, -1*np.ones(len(batch_label))))
+		batch = data_matrix[i : i+batch_size, : n_matrix_cols-1]
+		batch_label = data_matrix[i : i+batch_size, 1 : ]
+		# batch_label = np.column_stack((batch_label, -1*np.ones(len(batch_label))))
 		batch_list.append((batch, batch_label))
 	return batch_list
 
