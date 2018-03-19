@@ -23,8 +23,8 @@ def generatePlots(x, y, xlabel, ylabel, title):
 	py.savefig("graphs/" + title + " " + today + ".png", bbox_inches="tight")
 
    
-#since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
-def build_model(data_matrix, batch_size=256, hidden_size=256, lr=0.001):
+# relying on this fixed batch_size is dangerous for batch_sizes that aren't multiples of 10!
+def build_model(data_matrix, batch_size, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
 	n_classes = 5
 	max_gradient_norm = 5.
@@ -41,88 +41,56 @@ def build_model(data_matrix, batch_size=256, hidden_size=256, lr=0.001):
 	decoder_inputs_placeholder = tf.placeholder(tf.int32, shape=(sentence_len,None))
 	decoder_outputs_placeholder = tf.placeholder(tf.int32, shape=(sentence_len,None))
 	# labels_placeholder = tf.placeholder(tf.int32, shape=(sentence_len,None))
-	encoder_inputs = encoder_inputs_placeholder
-	print "encoder_inputs ", encoder_inputs.shape
-	decoder_inputs = decoder_inputs_placeholder
-	print "decoder_inputs ", decoder_inputs.shape
-	decoder_outputs = decoder_outputs_placeholder
-	print "decode outputs ", decoder_outputs.shape	
+	# encoder_inputs = encoder_inputs_placeholder
+	# print "encoder_inputs ", encoder_inputs.shape
+	# decoder_inputs = decoder_inputs_placeholder
+	# print "decoder_inputs ", decoder_inputs.shape
+	# decoder_outputs = decoder_outputs_placeholder
+	# print "decode outputs ", decoder_outputs.shape	
 
 	#assume encoder_inputs is size (max_time/len(sent, batch_size)
-	encoder_emb_inp = tf.nn.embedding_lookup(embed_matrix, encoder_inputs)
+	# batch_size = encoder_inputs_placeholder.shape[1]
+	encoder_emb_inp = tf.nn.embedding_lookup(embed_matrix, encoder_inputs_placeholder)
+	# print "enconder_emb_inp type ", encoder_emb_inp.dtype
 	#same assumptions for decoder
-	decoder_emb_inp = tf.nn.embedding_lookup(embed_matrix, decoder_inputs)
+	decoder_emb_inp = tf.nn.embedding_lookup(embed_matrix, decoder_inputs_placeholder)
+	# print "decoder_emb_inp type ", decoder_emb_inp.dtype
 	encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size)
 	#encoder_outputs =(max_time, batch_size, hidden_size), encoder_state = (batch_size, hidden_size)
 	source_lengths = tf.ones(batch_size)*sentence_len
+	# print "source_lengths type ", source_lengths.dtype
 	encoder_outputs, encoder_state = tf.nn.dynamic_rnn(encoder_cell, encoder_emb_inp, sequence_length=source_lengths, time_major=True, dtype=tf.float64)
-	print "encoder_outputs ", encoder_outputs.shape
-	print "encoder_state[0] ", encoder_state[0].shape
-	print "encoder_state[1] ", encoder_state[1].shape
+	# print "encoder_outputs ", encoder_outputs.shape
+	# print "encoder_state[0] ", encoder_state[0].shape
+	# print "encoder_state[1] ", encoder_state[1].shape
+	# print "encoder_state types ", encoder_state[0].dtype
 	
 	decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size)
-	#i think decoder_lengths is the length of each decoded sequence?
-	decoder_lengths = tf.ones(batch_size)*sentence_len
+	decoder_lengths = tf.ones(batch_size, tf.int32)*sentence_len
+	# print "decoder_lengths type ", decoder_lengths.dtype
 	helper = tf.contrib.seq2seq.TrainingHelper(decoder_emb_inp, decoder_lengths, time_major=True)
-	projection_layer = layers_core.Dense(util.vocab_size, use_bias=False)
+	projection_layer = layers_core.Dense(util.vocab_size+1, use_bias=False)
 	decoder = tf.contrib.seq2seq.BasicDecoder(decoder_cell, helper, encoder_state, output_layer=projection_layer)
-	outputs, _ = tf.contrib.seq2seq.dynamic_decode(decoder)
-	assert(not True)
+	outputs, _ , _ = tf.contrib.seq2seq.dynamic_decode(decoder)
 	logits = outputs.rnn_output
 	
-	crossent = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=decoder_outputs)
-	#what i call loss_op
-	train_loss = (tf.reduce(sum(crossent*tf.ones((decoder_outputs.shape)))) / batch_size)
+	crossent = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=decoder_outputs_placeholder, logits=logits)
+	target_weights = tf.ones((decoder_outputs_placeholder.shape[0], batch_size), dtype=tf.float64)
+	train_loss = (tf.reduce_sum(crossent*target_weights) / batch_size)
 	params = tf.trainable_variables()
 	gradients = tf.gradients(train_loss, params)
 	clipped_gradients, _ = tf.clip_by_global_norm(gradients, max_gradient_norm)
-	optimizer = tf.train.AdamOptimizer(learnign_rate=lr)
+	optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 	train_op = optimizer.apply_gradients(zip(clipped_gradients, params))
+	# assert(not True)
 
-	return pred, encoder_inputs_placeholder, decoder_inputs_placeholder, decoder_outputs_placeholder, train_op, loss_op
-
-	# output_projection = None
-	# x = tf.get_variable("proj_w", [hidden_size, util.vocab_size])
-	# w_t = tf.transpose(w)
-	# b = tf.get_variable("proj_b", [util.vocab_size])
-	# output_projection = (w,b)
-
-	# encoder_inputs = []
-	# decoder_inputs = []
-	# target_weights = [] #not sure if we need this
-
-	# #I think inputs are tuples (encoder_batch, decode_batch) ??
-	# encoder_inputs.append(tf.placeholder(tf.int32, shape=[None]))
-	# decoder_inputs.append(tf.placeholder(tf.in32, shape=[None]))
-	# target_weights.append(tf.placeholder(itf.float32, shape=[None]))
-
-	 
-	# # add placeholders
-	# input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
-	# labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
+	return logits, encoder_inputs_placeholder, decoder_inputs_placeholder, decoder_outputs_placeholder, train_op, train_loss
 
 
-	# # build model
-	# U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
-	# b = tf.get_variable("b", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
-    
-	# rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
-	# rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.5)
-	# outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
-	# h = final_state[1]
-	# pred = tf.matmul(h, U) + b
-
-	# loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
-	# loss_op = tf.reduce_mean(loss_op, 0)
-
-	# train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
-	# return pred, input_placeholder, labels_placeholder, train_op, loss_op
-
-
-def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
+def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=100, n_epochs=30):
 	tf.reset_default_graph()
-	pred, encoder_inputs_placeholder, decoder_inputs_placeholder, decoder_outputs_placeholder, train_op, loss_op = build_model(data_matrix, batch_size=256, hidden_size=hidden_size, lr=lr)	
+	pred, encoder_inputs_placeholder, decoder_inputs_placeholder, decoder_outputs_placeholder, train_op, loss_op = build_model(data_matrix, batch_size, hidden_size=hidden_size, lr=lr)	
 	saver = tf.train.Saver()	
 	avg_loss_list = []
 	with tf.Session() as sess:
@@ -132,13 +100,13 @@ def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_
 			saver.restore(sess, saved_model_path)
 			print("Model restored.")
 
-		minibatches = util.get_minibatches_lm(data_matrix, batch_size)
+		minibatches = util.get_minibatches_seq(data_matrix, batch_size)
 		for i in range(n_epochs):
 			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
 			for tup in minibatches:		
-				_, loss = sess.run([train_op, loss_op], feed_dict={encoder_inputs_placeholder: tf.transpose(tup[0]), 
-				decoder_inputs_placeholder: tf.transpose(tup[1]), decoder_outputs_placeholder: tf.transpose(tup[0])})
+				_, loss = sess.run([train_op, loss_op], feed_dict={encoder_inputs_placeholder: np.transpose(tup[0]), 
+				decoder_inputs_placeholder: np.transpose(tup[1]), decoder_outputs_placeholder: np.transpose(tup[0])})
 				batch_loss_list.append(loss)
 			avg_loss_list.append(np.mean(batch_loss_list))
 			print "=====>loss: " + str(avg_loss_list[i]) + " "
@@ -188,7 +156,7 @@ if __name__ == '__main__':
 	print "Done opening train data!"
 	# print "Running experiment 1..."
 	train(train_matrix, "./models/seq2seq", "seq2seq", 
-		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=5)
+		hidden_size=256, lr=0.001, RESUME=False, batch_size=10, n_epochs=5)
 	# print "Running experiment"
 	# train(train_matrix, train_labels, "./models/basic_lstm_cell drop05", "Basic LSTM cell drop05", 
 		# hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=20)

@@ -159,7 +159,7 @@ def test_minibatches():
 	print ""
 	# print "data_labels: ", data_labels
 	# print ""
-	batches = get_minibatches_lm(data_matrix, batch_size)
+	batches = get_minibatches_seq(data_matrix, batch_size)
 	for tup in batches:
 		print "batch data", tup[0]
 		print "batch label", tup[1]
