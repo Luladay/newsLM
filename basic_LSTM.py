@@ -13,10 +13,6 @@ def generatePlots(x, y, xlabel, ylabel, title):
 	py.figure(figsize=(10,8))
 
 	py.plot(x, y, color="blue")
-	# py.plot(x, testAccReg, "b--", label='Test Accuracy (Lyrics)')
-	# py.plot(x, trainAccAug, label='Train Accuracy (Lyrics + Audio)', color="red")
-	# py.plot(x, testAccAug, linestyle="--", color="red", label='Test Accuracy (Lyrics + Audio)')
-	# py.figlegend()
 	py.title(title, fontsize="large")
 	py.xlabel(xlabel, fontsize="large")
 	py.ylabel(ylabel, fontsize="large")
@@ -46,8 +42,11 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
 	rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.8)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
+	# print "batch size ", final_state[1].shape[1]
 
 	h = final_state[1]
+	# h = tf.get_variable("final_state", dtype=tf.float64, initializer=h, trainable=False)
+	# h = tf.assign_add(h, final_state[1])
 	pred = tf.matmul(h, U) + b
 
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
@@ -106,19 +105,28 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 		saver.restore(sess, saved_model_path)
 		print("Model restored.")
 
-		minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
-		for tup in minibatches:
-			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
-			for i, row in enumerate(pred_temp):
-				pred_list.append(np.where(row == max(row))[0][0])
-			for i, row in enumerate(labels_temp):
-				label_list.append(np.where(row == max(row))[0][0])
+		print "check trainable variables"
+		all_vars = tf.trainable_variables()
+		for i in range(len(all_vars)):
+			name = all_vars[i].name
+			values = sess.run(name)
+			print('name', name)
+			print('value', values)
+			print('shape',values.shape)
 
-			loss_list.append(loss)
-		print "Loss: " + str(np.mean(loss_list)) + "\n"			
+		# minibatches = util.get_minibatches(data_matrix, data_labels, batch_size)
+		# for tup in minibatches:
+		# 	pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
+		# 	for i, row in enumerate(pred_temp):
+		# 		pred_list.append(np.where(row == max(row))[0][0])
+		# 	for i, row in enumerate(labels_temp):
+		# 		label_list.append(np.where(row == max(row))[0][0])
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
-	util.get_accuracy(pred_list, label_list)
+		# 	loss_list.append(loss)
+		# print "Loss: " + str(np.mean(loss_list)) + "\n"			
+
+	# util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
+	# util.get_accuracy(pred_list, label_list)
 
 
 if __name__ == '__main__':
@@ -127,25 +135,24 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
-	# print "Running experiment 1..."
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-	# 	hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
+	print "Running experiment 1..."
+	train(train_matrix, train_labels, "./models/TEST", "TEST", 
+		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=1)
+	
 
-	print "Running experiment"
-	train(train_matrix, train_labels, "./models/basic_lstm_gradclip 1", "Basic LSTM grad clip 1", 
-		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=20)	
-
-	print "Opening dev data..."
-	dev_matrix = util.openPkl("train_matrix_rnn_short.pkl")	
-	dev_labels = util.openPkl("train_labels_rnn_short.pkl")
-	print "Done opening dev data!"
-	print "------------"
+	# print "Opening dev data..."
+	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	# print "Done opening dev data!"
+	# print "------------"
 	# print "Evaluating model drop05"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_cell drop08--smallest loss", "Basic LSTM cell drop08", batch_size=256)
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_drop05--smallest loss", "Basic LSTM drop05", batch_size=256)
+	
 	# print "Evaluating model drop08"
-	test(dev_matrix, dev_labels, "./models/basic_lstm_gradclip 1--smallest loss", "Basic LSTM grad clip 1", batch_size=256)
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_gradclip 1--smallest loss", "Basic LSTM grad clip 1", batch_size=256)
 	# print "Evaluating model on hsize300"
+
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 lr05--smallest loss", "Basic LSTM hsize300 lr05", batch_size=256)
 	# print "Evaluating model on hsize512"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512 lr01--smallest loss", "Basic LSTM hsize512 lr01", batch_size=256)
