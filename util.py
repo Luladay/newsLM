@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score
 
 
 UNK = '<UNK>'
@@ -95,11 +96,7 @@ def outputConfusionMatrix(pred, labels, filename):
 def get_accuracy(pred, labels):
     """ Precision for classifier """
     prec = 2
-    non_matching = 0
-    for tup in zip(pred, labels):
-    	if tup[0] != tup[1]:
-    		non_matching += 1
-    accuracy = non_matching / float(len(pred))
+    accuracy = accuracy_score(labels, pred)
     print "Accuracy: " + str(round(accuracy * 100, prec)) + "%"
 
     micro_f1 = f1_score(labels, pred, average="micro")
