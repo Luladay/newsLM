@@ -110,7 +110,7 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
+	# util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
 
 
@@ -130,26 +130,28 @@ if __name__ == '__main__':
 	# print "Running experiment 3..."
 	# train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
 	# 	hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=45)
-	print ">>>>Learning rate pt2"
-	print "Running experiment 1..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr05", "Basic LSTM hsize256 lr05", 
-		hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=30)
-	print "Running experiment 2..."
-	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr05", "Basic LSTM hsize300 lr05", 
-		hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=30)
+	# print ">>>>Learning rate pt2"
+	# print "Running experiment 1..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr05", "Basic LSTM hsize256 lr05", 
+	# 	hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=30)
+	# print "Running experiment 2..."
+	# train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr05", "Basic LSTM hsize300 lr05", 
+	# 	hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=30)
 	# print "Running experiment 3..."
 	# train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr05", "Basic LSTM hsize512 lr05", 
 	# 	hidden_size=512, lr=0.005, RESUME=False, batch_size=256, n_epochs=45)
 
 	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
+	# dev_matrix = util.openPkl("train_matrix_rnn_short.pkl")	
+	# dev_labels = util.openPkl("train_labels_rnn_short.pkl")
 	# print "Done opening dev data!"
 	# print "------------"
-	# print "Evaluating model on hsize256 lr01 +10"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256 lr01--smallest loss", "Basic LSTM hsize256 lr01", batch_size=256)
+	# print "Evaluating model on hsize256 lr05"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256 lr05--smallest loss", "Basic LSTM hsize256 lr05", batch_size=256)
+	# print "Evaluating model on hsize256 lr05"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256 lr05--smallest loss", "Basic LSTM hsize256 lr05", batch_size=256)
 	# print "Evaluating model on hsize300"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300--smallest loss", "hsize300", batch_size=256)
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 lr05--smallest loss", "Basic LSTM hsize300 lr05", batch_size=256)
 	# print "Evaluating model on hsize512"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512--smallest loss", "hsize512", batch_size=256)
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512 lr01--smallest loss", "Basic LSTM hsize512 lr01", batch_size=256)
 
