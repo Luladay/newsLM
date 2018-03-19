@@ -45,13 +45,19 @@ def build_model(data_matrix, hidden_size=256, lr=0.001):
 	b2 = tf.get_variable("b2", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
 	b1 = tf.get_variable("b1", shape=[1, hidden_size], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
 
-	Wh = tf.get_variable("Wh", shape = [ hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
+	Wh = tf.get_variable("Wh", shape = [hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	#We = tf.get_variable("We", shape = [hidden_size, n_features], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
-	h = tf.sigmoid( tf.matmul(Wh, final_state[1])  + b1)
+	h = tf.sigmoid( tf.matmul(final_state[1], Wh)  + b1)
 	pred = tf.matmul(h, U) + b2
+	# print "input_placeholder: ", input_placeholder.shape
+	# print "labels_placeholder: ", labels_placeholder
+	# print "final state(h): ", final_state[1].shape
+	# print "Wh: ", Wh.shape
+	# print "b1: ", b1.shape
+	# print "pred: ", pred.shape
 
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
@@ -76,9 +82,12 @@ def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_
 		for i in range(n_epochs):
 			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
-			for tup in minibatches:
-				label_data = np.zeros((batch_size, util.vocab_size))
-				label_data[np.arange(batch_size), tup[1]] = 1
+			for j, tup in enumerate(minibatches):
+				# print "batch ", j
+				# print "tup[0]size: ", tup[0].shape
+				# print "tup[1]size: ", tup[1].shape
+				label_data = np.zeros((len(tup[1]), util.vocab_size))
+				label_data[np.arange(len(tup[1])), tup[1]] = 1
 
 				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: label_data})
 				batch_loss_list.append(loss)
