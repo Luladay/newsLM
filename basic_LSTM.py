@@ -37,12 +37,14 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	embed_matrix = util.openPkl("embeddings_matrix.pkl")
 	print "Done opening embedding matrix!"
 	x = tf.nn.embedding_lookup(embed_matrix, input_placeholder)
+	# x = tf.nn.dropout(x, 0.08)
 
 	# build model
 	U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	b = tf.get_variable("b", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
     
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
+	rnn_cell = tf.nn.rnn_cell.DropoutWrapper(cell, output_keep_prob=0.5)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
 	h = final_state[1]
@@ -110,7 +112,7 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
-	# util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
+	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
 
 
@@ -120,36 +122,25 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
-	# print ">>>>Hidden size"
 	# print "Running experiment 1..."
 	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-	# 	hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
+		# hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
 	# print "Running experiment 2..."
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr01", "Basic LSTM hsize300 lr01", 
-	# 	hidden_size=300, lr=0.001, RESUME=False, batch_size=256, n_epochs=45)
+	train(train_matrix, train_labels, "./models/basic_lstm_cell drop05", "Basic LSTM cell drop05", 
+		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=20)
 	# print "Running experiment 3..."
 	# train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr01", "Basic LSTM hsize512 lr01", 
 	# 	hidden_size=512, lr=0.001, RESUME=False, batch_size=256, n_epochs=45)
-	# print ">>>>Learning rate pt2"
-	# print "Running experiment 1..."
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr05", "Basic LSTM hsize256 lr05", 
-	# 	hidden_size=256, lr=0.005, RESUME=False, batch_size=256, n_epochs=30)
-	# print "Running experiment 2..."
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize300 lr05", "Basic LSTM hsize300 lr05", 
-	# 	hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=30)
-	# print "Running experiment 3..."
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize512 lr05", "Basic LSTM hsize512 lr05", 
-	# 	hidden_size=512, lr=0.005, RESUME=False, batch_size=256, n_epochs=45)
 
 	# print "Opening dev data..."
 	# dev_matrix = util.openPkl("train_matrix_rnn_short.pkl")	
 	# dev_labels = util.openPkl("train_labels_rnn_short.pkl")
 	# print "Done opening dev data!"
 	# print "------------"
-	# print "Evaluating model on hsize256 lr05"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256 lr05--smallest loss", "Basic LSTM hsize256 lr05", batch_size=256)
-	# print "Evaluating model on hsize256 lr05"
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize256 lr05--smallest loss", "Basic LSTM hsize256 lr05", batch_size=256)
+	# print "Evaluating model drop05"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_drop05--smallest loss", "Basic LSTM drop05", batch_size=256)
+	# print "Evaluating model drop08"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_drop08--smallest loss", "Basic LSTM drop08", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 lr05--smallest loss", "Basic LSTM hsize300 lr05", batch_size=256)
 	# print "Evaluating model on hsize512"

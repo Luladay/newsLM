@@ -26,13 +26,13 @@ def generatePlots(x, y, xlabel, ylabel, title):
 #since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
 def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
-	n_classes = util.short_article_len-1 #7k
-	# lr = 0.001
-	# hidden_size = 256
+	n_classes = util.vocab_size #7k
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len-1))
-	labels_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len-1))
+	labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
+	labels = tf.one_hot(labels_placeholder, util.vocab_size)
+	print "labels: ", labels.shape
 
 	# add embedding layer!
 	print "Opening embedding matrix..."
@@ -47,7 +47,6 @@ def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	# b1 = tf.get_variable("b1", shape=[1, hidden_size], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
 
 	# Wh = tf.get_variable("Wh", shape = [hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
-	#We = tf.get_variable("We", shape = [hidden_size, n_features], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
 	# inputs = tf.unstack(x, num=util.short_article_len-1, axis=1)
 	# print "inputs: ", inputs.shape
@@ -66,14 +65,15 @@ def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	# print "b1: ", b1.shape
 	# print "U transpose: ", tf.transpose(U).shape
 	# print "h: ", h.shape
-	# print "pred: ", pred.shape
 
 	# if train:	
 	# 	loss_op = tf.nn.sampled_softmax_loss(weights=tf.transpose(U), biases=b2, labels=labels_placeholder, inputs=h, num_sampled=100, num_classes=util.vocab_size)
 	# else:
 	pred = tf.matmul(final_state[1], U) + b2
+	print "pred: ", pred.shape
 	# weights = np.ones((1, util.short_article_len))
 	# loss_op = tf.contrib.legacy_seq2seq.sequence_loss_by_example(h, labels_placeholder, weights)
+
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
 
@@ -99,7 +99,7 @@ def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_
 			print "Epoch " + str(i+1) + ": "
 			for j, tup in enumerate(minibatches):
 				# label_data = np.zeros((len(tup[1]), util.vocab_size))
-				# label_data[np.arange(len(tup[1])), tup[1]] = 1
+				# label_data[np.arange(len(tup[1])), tup[1]] = 1				
 
 				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				batch_loss_list.append(loss)
