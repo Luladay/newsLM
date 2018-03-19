@@ -78,8 +78,8 @@ def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_
 			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
 			for tup in minibatches:
-				label_data = np.zeros((batch_size, util.vocab_size))
-				label_data[np.arange(batch_size), tup[1]] = 1
+				label_data = np.zeros((len(tup[1]), util.vocab_size))
+				label_data[np.arange(len(tup[1])), tup[1]] = 1
 
 				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: label_data})
 				batch_loss_list.append(loss)

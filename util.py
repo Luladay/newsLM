@@ -56,6 +56,7 @@ def get_minibatches(data_matrix, data_labels, batch_size):
 		batch_list.append((batch, batch_label))
 	return batch_list
 
+
 def get_minibatches_lm(data_matrix, batch_size):
 	batch_list = []
 	indices = []
