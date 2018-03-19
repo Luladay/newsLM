@@ -24,7 +24,7 @@ def generatePlots(x, y, xlabel, ylabel, title):
 
 
 #since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
-def build_model(data_matrix, hidden_size=256, lr=0.001):
+def build_model(data_matrix, train=True, hidden_size=256, lr=0.001):
 	n_features = util.glove_dimensions
 	n_classes = util.vocab_size #7k
 	# lr = 0.001
@@ -32,7 +32,7 @@ def build_model(data_matrix, hidden_size=256, lr=0.001):
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len - 1))
-	labels_placeholder = tf.placeholder(tf.int32, shape=(None, n_classes))
+	labels_placeholder = tf.placeholder(tf.int32, shape=(None, 1))
 
 	# add embedding layer!
 	print "Opening embedding matrix..."
@@ -47,19 +47,23 @@ def build_model(data_matrix, hidden_size=256, lr=0.001):
 
 	Wh = tf.get_variable("Wh", shape = [hidden_size, hidden_size], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	#We = tf.get_variable("We", shape = [hidden_size, n_features], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
-	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
+	rnn_cell = tf.contrib.rnn.BasicRNNCell(hidden_size)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
-	h = tf.sigmoid( tf.matmul(final_state[1], Wh)  + b1)
-	pred = tf.matmul(h, U) + b2
-	# print "input_placeholder: ", input_placeholder.shape
-	# print "labels_placeholder: ", labels_placeholder
-	# print "final state(h): ", final_state[1].shape
-	# print "Wh: ", Wh.shape
-	# print "b1: ", b1.shape
+	h = tf.sigmoid( tf.matmul(final_state, Wh)  + b1)
+	print "input_placeholder: ", input_placeholder.shape
+	print "labels_placeholder: ", labels_placeholder
+	print "final state(h): ", final_state[1].shape
+	print "Wh: ", Wh.shape
+	print "b1: ", b1.shape
+	print "U transpose: ", tf.transpose(U).shape
 	# print "pred: ", pred.shape
-
-	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
+	if train:
+		loss_op = tf.nn.sampled_softmax_loss(weights=tf.transpose(U), biases=b2, labels=labels_placeholder, inputs=h, num_sampled=100, num_classes=util.vocab_size)
+		# sampled_values=tf.nn.uniform_candidate_sampler(labels_placeholder, ))
+	else:
+		pred = tf.matmul(h, U) + b2
+		loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=tf.one_hot(labels_placeholder, n_classes), logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
 
 	train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
@@ -68,7 +72,7 @@ def build_model(data_matrix, hidden_size=256, lr=0.001):
 
 def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_path=None, RESUME=False, batch_size=256, n_epochs=30):
 	tf.reset_default_graph()
-	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix,  hidden_size=hidden_size, lr=lr)
+	_, input_placeholder, labels_placeholder, train_op, loss_op = build_model(data_matrix, train=True, hidden_size=hidden_size, lr=lr)
 	saver = tf.train.Saver()
 	avg_loss_list = []
 	with tf.Session() as sess:
@@ -83,13 +87,10 @@ def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_
 			batch_loss_list = []
 			print "Epoch " + str(i+1) + ": "
 			for j, tup in enumerate(minibatches):
-				# print "batch ", j
-				# print "tup[0]size: ", tup[0].shape
-				# print "tup[1]size: ", tup[1].shape
-				label_data = np.zeros((len(tup[1]), util.vocab_size))
-				label_data[np.arange(len(tup[1])), tup[1]] = 1
+				# label_data = np.zeros((len(tup[1]), util.vocab_size))
+				# label_data[np.arange(len(tup[1])), tup[1]] = 1
 
-				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: label_data})
+				_, loss = sess.run([train_op, loss_op], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 				batch_loss_list.append(loss)
 			avg_loss_list.append(np.mean(batch_loss_list))
 			print "=====>loss: " + str(avg_loss_list[i]) + " "
@@ -106,7 +107,7 @@ def train(data_matrix, save_path, title, hidden_size=256, lr=0.001, saved_model_
 
 def test(data_matrix, saved_model_path, title):
 	tf.reset_default_graph()
-	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, data_labels)
+	pred, input_placeholder, labels_placeholder, _, loss_op = build_model(data_matrix, train=False)
 	saver = tf.train.Saver()
 	loss_list = []
 	label_list= []
@@ -118,10 +119,10 @@ def test(data_matrix, saved_model_path, title):
 
 		minibatches = util.get_minibatches_lm(data_matrix,  batch_size)
 		for tup in minibatches:
-			label_data = np.zeros((batch_size, util.vocab_size))
-			label_data[np.arange(batch_size), tup[1]] = 1
+			#label_data = np.zeros((batch_size, util.vocab_size))
+			#label_data[np.arange(batch_size), tup[1]] = 1
 
-			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: label_data})
+			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: tup[0], labels_placeholder: tup[1]})
 			for i, row in enumerate(pred_temp):
 				pred_list.append(np.where(row == max(row))[0][0])
 			for i, row in enumerate(labels_temp):
@@ -141,7 +142,7 @@ if __name__ == '__main__':
 	#train_labels = util.openPkl("train_lm_labels.pkl")
 	print "Done opening train data!"
 	print "Running experiment 1..."
-	train(train_matrix, "./models/lm_lstm", "LM LSTM",
+	train(train_matrix, "./models/lm_rnn", "LM RNN",
 		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=40)
 		
 	# print "Running experiment 2..."
