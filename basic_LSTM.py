@@ -13,10 +13,6 @@ def generatePlots(x, y, xlabel, ylabel, title):
 	py.figure(figsize=(10,8))
 
 	py.plot(x, y, color="blue")
-	# py.plot(x, testAccReg, "b--", label='Test Accuracy (Lyrics)')
-	# py.plot(x, trainAccAug, label='Train Accuracy (Lyrics + Audio)', color="red")
-	# py.plot(x, testAccAug, linestyle="--", color="red", label='Test Accuracy (Lyrics + Audio)')
-	# py.figlegend()
 	py.title(title, fontsize="large")
 	py.xlabel(xlabel, fontsize="large")
 	py.ylabel(ylabel, fontsize="large")
@@ -24,10 +20,10 @@ def generatePlots(x, y, xlabel, ylabel, title):
 
    
 #since test() relies on default value of hidden_size and lr, be sure to update default value once it's tuned!!!!
-def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
+def build_model(data_matrix, data_labels, hidden_size=300, lr=0.005):
 	n_features = util.glove_dimensions
 	n_classes = 5
-	max_grad_norm = 5.
+	# max_grad_norm = 1.
 
 	# add placeholders
 	input_placeholder = tf.placeholder(tf.int32, shape=(None, util.short_article_len))
@@ -38,13 +34,14 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	embed_matrix = util.openPkl("embeddings_matrix.pkl")
 	print "Done opening embedding matrix!"
 	x = tf.nn.embedding_lookup(embed_matrix, input_placeholder)
+	# x = tf.nn.dropout(x, 0.8)
 
 	# build model
 	U = tf.get_variable("U", shape=[hidden_size, n_classes], dtype=tf.float64, initializer=tf.contrib.layers.xavier_initializer())
 	b = tf.get_variable("b", shape=[1, n_classes], dtype=tf.float64, initializer=tf.constant_initializer(0.0))
     
 	rnn_cell = tf.contrib.rnn.BasicLSTMCell(hidden_size)
-	rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.8)
+	# rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.8)
 	outputs, final_state = tf.nn.dynamic_rnn(rnn_cell, x, dtype=tf.float64)
 
 	h = final_state[1]
@@ -53,12 +50,12 @@ def build_model(data_matrix, data_labels, hidden_size=256, lr=0.001):
 	loss_op = tf.nn.softmax_cross_entropy_with_logits(labels=labels_placeholder, logits=pred)
 	loss_op = tf.reduce_mean(loss_op, 0)
 
-	params = tf.trainable_variables()
-	gradients = tf.gradients(loss_op, params)
-	clippied_gradients, _ = tf.clip_by_global_norm(gradients, max_grad_norm)
-	optimizer = tf.train.AdamOptimizer(learning_rate=lr)
-	train_op = optimizer.apply_gradients(zip(clippied_gradients, params))
-	# train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
+	# params = tf.trainable_variables()
+	# gradients = tf.gradients(loss_op, params)
+	# clippied_gradients, _ = tf.clip_by_global_norm(gradients, max_grad_norm)
+	# optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+	# train_op = optimizer.apply_gradients(zip(clippied_gradients, params))
+	train_op = tf.train.AdamOptimizer(learning_rate = lr).minimize(loss_op)
 	return pred, input_placeholder, labels_placeholder, train_op, loss_op
 
 
@@ -117,7 +114,7 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
+	util.outputConfusionMatrix(pred_list, label_list, "confusion matrices/confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
 
 
@@ -127,26 +124,33 @@ if __name__ == '__main__':
 	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
 	train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	print "Done opening train data!"
-	# print "Running experiment 1..."
-	# train(train_matrix, train_labels, "./models/basic_lstm_hsize256 lr01", "Basic LSTM hsize256 lr01", 
-	# 	hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_hsize256 lr01", RESUME=True, batch_size=256, n_epochs=5)
+	print "Running experiment 1..."
+	train(train_matrix, train_labels, "./models/basic_lstm_hsize300 drop05", "Basic LSTM hsize300 drop05", 
+		hidden_size=300, lr=0.005, RESUME=False, batch_size=256, n_epochs=20)
 
-	print "Running experiment"
-	train(train_matrix, train_labels, "./models/basic_lstm_gradclip 1", "Basic LSTM grad clip 1", 
-		hidden_size=256, lr=0.001, RESUME=False, batch_size=256, n_epochs=20)	
+	# print "Running experiment"
+	# train(train_matrix, train_labels, "./models/basic_lstm_gradclip", "Basic LSTM grad clip", 
+	# 	hidden_size=256, lr=0.001, saved_model_path="./models/basic_lstm_gradclip", RESUME=True, batch_size=256, n_epochs=25)	
 
 	print "Opening dev data..."
-	dev_matrix = util.openPkl("train_matrix_rnn_short.pkl")	
-	dev_labels = util.openPkl("train_labels_rnn_short.pkl")
+	dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
+	dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
 	print "Done opening dev data!"
 	print "------------"
 	# print "Evaluating model drop05"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_cell drop08--smallest loss", "Basic LSTM cell drop08", batch_size=256)
-	# test(dev_matrix, dev_labels, "./models/basic_lstm_drop05--smallest loss", "Basic LSTM drop05", batch_size=256)
+	print "Evaluating experiment 1..."
+	test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 drop05--smallest loss", "Basic LSTM hsize300 drop051", batch_size=256)
+	# print "hsize300 lr05"
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 lr05--smallest loss", "Basic LSTM hsize300 lr05", batch_size=256)
+
 	# print "Evaluating model drop08"
-	test(dev_matrix, dev_labels, "./models/basic_lstm_gradclip 1--smallest loss", "Basic LSTM grad clip 1", batch_size=256)
+	# test(dev_matrix, dev_labels, "./models/basic_lstm_gradclip 1--smallest loss", "Basic LSTM grad clip 1", batch_size=256)
 	# print "Evaluating model on hsize300"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize300 lr05--smallest loss", "Basic LSTM hsize300 lr05", batch_size=256)
 	# print "Evaluating model on hsize512"
 	# test(dev_matrix, dev_labels, "./models/basic_lstm_hsize512 lr01--smallest loss", "Basic LSTM hsize512 lr01", batch_size=256)
-
+	# print "Opening test data..."
+	# test_matrix = util.openPkl("train_matrix_rnn_short.pkl")	
+	# test_labels = util.openPkl("train_labels_rnn_short.pkl")
+	# print "Done opening dev data!"
