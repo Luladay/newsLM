@@ -71,6 +71,18 @@ def get_minibatches_seq(data_matrix, batch_size, max_sequence_length):
 		batch_list.append((batch, batch_label))
 	return batch_list
 
+def get_minibatches_seq_test(data_matrix, data_labels, batch_size, max_sequence_length):
+	batch_list = []	
+	n_matrix_rows = data_matrix.shape[0] #dev or training examples
+	n_matrix_cols = data_matrix.shape[1]
+	for i in range(0, n_matrix_rows, batch_size):
+		batch_data = data_matrix[i : i+batch_size, : max_sequence_length]
+		batch = np.insert(batch_data, max_sequence_length, EOS_index, axis=1)
+		batch_label = data_labels[i : i+batch_size]
+		# batch_label = np.insert(batch_data, 0, EOS_index, axis=1)
+		batch_list.append((batch, batch_label))
+	return batch_list
+
 def get_minibatches_lm(data_matrix, batch_size):
 	batch_list = []
 	indices = []
@@ -153,13 +165,13 @@ def checkForNans():
 
 def test_minibatches():
 	data_matrix = np.arange(20).reshape((4,5))
-	data_labels = np.arange(10)
+	data_labels = np.arange(4)
 	batch_size = 2
 	print "data_matrix: ", data_matrix
 	print ""
-	# print "data_labels: ", data_labels
-	# print ""
-	batches = get_minibatches_seq(data_matrix, batch_size, 3)
+	print "data_labels: ", data_labels
+	print ""
+	batches = get_minibatches_seq_test(data_matrix, data_labels, batch_size, 3)
 	for tup in batches:
 		print "batch data", tup[0]
 		print "batch label", tup[1]
