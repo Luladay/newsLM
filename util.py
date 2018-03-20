@@ -58,14 +58,14 @@ def get_minibatches(data_matrix, data_labels, batch_size):
 		batch_list.append((batch, batch_label))
 	return batch_list
 
-def get_minibatches_seq(data_matrix, batch_size):
+def get_minibatches_seq(data_matrix, batch_size, max_sequence_length):
 	batch_list = []
 	indices = []
 	n_matrix_rows = data_matrix.shape[0] #dev or training examples
 	n_matrix_cols = data_matrix.shape[1]
 	for i in range(0, n_matrix_rows, batch_size):
-		batch_data = data_matrix[i : i+batch_size, : ]
-		batch = np.insert(batch_data, n_matrix_cols, EOS_index, axis=1)
+		batch_data = data_matrix[i : i+batch_size, : max_sequence_length]
+		batch = np.insert(batch_data, max_sequence_length, EOS_index, axis=1)
 		# batch_label = data_matrix[i : i+batch_size, 1 : ]
 		batch_label = np.insert(batch_data, 0, EOS_index, axis=1)
 		batch_list.append((batch, batch_label))
@@ -159,7 +159,7 @@ def test_minibatches():
 	print ""
 	# print "data_labels: ", data_labels
 	# print ""
-	batches = get_minibatches_seq(data_matrix, batch_size)
+	batches = get_minibatches_seq(data_matrix, batch_size, 3)
 	for tup in batches:
 		print "batch data", tup[0]
 		print "batch label", tup[1]
