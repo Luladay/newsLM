@@ -36,8 +36,7 @@ def build_model(data_matrix, max_sequence_length=100, hidden_size=256, lr=0.001)
 	decoder_inputs_placeholder = tf.placeholder(tf.int32, shape=(max_sequence_length,None))
 	decoder_outputs_placeholder = tf.placeholder(tf.int32, shape=(max_sequence_length,None))
 	
-	batch_size = tf.shape(encoder_inputs_placeholder)[1]
-	# labels_placeholder = tf.placeholder(tf.int32, shape=(max_sequence_length,None))	
+	# batch_size = tf.shape(encoder_inputs_placeholder)[1]
 	# encoder_inputs = encoder_inputs_placeholder
 	# print "encoder_inputs ", encoder_inputs.shape
 	# decoder_inputs = decoder_inputs_placeholder
@@ -48,16 +47,13 @@ def build_model(data_matrix, max_sequence_length=100, hidden_size=256, lr=0.001)
 	#assume encoder_inputs is size (max_time/len(sent, batch_size)
 	batch_size = tf.shape(encoder_inputs_placeholder)[1]
 	encoder_emb_inp = tf.nn.embedding_lookup(embed_matrix, encoder_inputs_placeholder)
-	# print "enconder_emb_inp type ", encoder_emb_inp.dtype
 	decoder_emb_inp = tf.nn.embedding_lookup(embed_matrix, decoder_inputs_placeholder)
 	encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size)
-	#encoder_outputs =(max_time, batch_size, hidden_size), encoder_state = (batch_size, hidden_size)
 	source_lengths = tf.ones([batch_size])*max_sequence_length
-	# print "source_lengths type ", source_lengths.dtype
 	encoder_outputs, encoder_state = tf.nn.dynamic_rnn(encoder_cell, encoder_emb_inp, sequence_length=source_lengths, time_major=True, dtype=tf.float64)
+	print "encoder_state[0] ", encoder_state[0].shape
 
-	#want to save encoder_state
-	# encoder_state = tf.
+	#want to save encoder_state here
 	
 	decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_size)
 	decoder_lengths = tf.ones([batch_size], dtype=tf.int32)*max_sequence_length
