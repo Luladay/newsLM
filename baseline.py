@@ -68,7 +68,7 @@ def test(data_matrix, data_labels, saved_model_path, batch_size=1000):
 			loss_list.append(loss)
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
-	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix_baseline")
+	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix_baseline_test")
 	util.get_accuracy(pred_list, label_list)
 
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 	# train(train_matrix, train_labels, "./models/baseline", batch_size=1000, n_epochs=1500)
 
 	print "Opening test data..."
-	dev_matrix = util.openPkl("dev_matrix_short.pkl")	
-	dev_labels = util.openPkl("dev_labels_short.pkl")
+	dev_matrix = util.openPkl("test_matrix_short.pkl")	
+	dev_labels = util.openPkl("test_labels_short.pkl")
 	print "Done opening test data!"
 	test(dev_matrix, dev_labels, "./models/baseline", batch_size=1000)
