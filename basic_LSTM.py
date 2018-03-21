@@ -115,10 +115,28 @@ def test(data_matrix, data_labels, saved_model_path, title, batch_size=256):
 				label_list.append(np.where(row == max(row))[0][0])
 
 			loss_list.append(loss)
+
+			count = 0
+			for i in range(len(pred_list)):
+				if pred_list[i] != label_list[i]:
+					count +=1 
+					print "sentence: ", reconstruct_sentence((tup[0][i:i+1,:]).tolist())
+					print "predicted label: ", pred_list[i]
+					print "correct label: ", label_list[i]
+				if count > 4:
+					break
+				
 		print "Loss: " + str(np.mean(loss_list)) + "\n"			
 
 	util.outputConfusionMatrix(pred_list, label_list, "confusion matrices/confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
+
+def reconstruct_sentence(index_list):
+	reverse_dict = util.openPkl("reverse_dict.pkl")
+	article = ""
+	for index in index_list[0]:
+		article += reverse_dict[int(index)] + " "
+	return article
 
 
 if __name__ == '__main__':

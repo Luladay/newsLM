@@ -183,26 +183,45 @@ def test_classifier(data_matrix, data_labels, saved_model_path, title, max_seque
 	with tf.Session() as sess:
 		sess.run(tf.global_variables_initializer())
 		saver.restore(sess, saved_model_path)
-		print("Model restored.")
-		print tf.trainable_variables()			
+		print("Model restored.")			
 
 		minibatches = util.get_minibatches_seq_test(data_matrix, data_labels, batch_size, max_sequence_length)
 		for tup in minibatches:
 			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: np.transpose(tup[0]), labels_placeholder: tup[1]})
+
 			for i, row in enumerate(pred_temp):
 				pred_list.append(np.where(row == max(row))[0][0])
 			for i, row in enumerate(labels_temp):
 				label_list.append(np.where(row == max(row))[0][0])
 			loss_list.append(loss)
+
+			count = 0
+			for i in range(len(pred_list)):
+				if pred_list[i] != label_list[i]:
+					count +=1 
+					print "sentence: ", reconstruct_sentence((tup[0][i:i+1, :max_sequence_length]).tolist())
+					print "predicted label: ", pred_list[i]
+					print "correct label: ", label_list[i]
+				if count > 4:
+					break
+			break
 		print "Loss: " + str(np.mean(loss_list)) + "\n"	
 
 	util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	util.get_accuracy(pred_list, label_list)
 
-def test_seq(data_matrix, saved_model_path, title, max_sequence_length=70, data_labels=None, batch_size=60):
-	tf.reset_default_graph()
-	pred, encoder_inputs_placeholder, decoder_inputs_placeholder, decoder_outputs_placeholder, _, loss_op = build_model(data_matrix)
 
+def reconstruct_sentence(index_list):
+	reverse_dict = util.openPkl("reverse_dict.pkl")
+	article = ""
+	for index in index_list[0]:
+		article += reverse_dict[int(index)] + " "
+	return article
+
+
+def test_seq(data_matrix, data_labels, saved_model_path, title, max_sequence_length=70, batch_size=60):
+	tf.reset_default_graph()	
+	pred, encoder_inputs_placeholder, decoder_inputs_placeholder, decoder_outputs_placeholder, train_op, loss_op = build_model(data_matrix)
 	saver = tf.train.Saver()
 
 	loss_list = []
@@ -213,36 +232,45 @@ def test_seq(data_matrix, saved_model_path, title, max_sequence_length=70, data_
 		saver.restore(sess, saved_model_path)
 		print("Model restored.")
 
-		minibatches = util.get_minibatches_seq_test(data_matrix, data_labels, batch_size, max_sequence_length)
+		minibatches = util.get_minibatches_seq(data_matrix, batch_size, max_sequence_length)
 		for tup in minibatches:
-			pred_temp, loss, labels_temp = sess.run([pred, loss_op, labels_placeholder], feed_dict={input_placeholder: np.transpose(tup[0]), 
-				labels_placeholder: tup[1]})
+			pred_temp, loss, labels_temp = sess.run([pred, loss_op, encoder_inputs_placeholder], feed_dict={encoder_inputs_placeholder: np.transpose(tup[0]), 
+				decoder_inputs_placeholder: np.transpose(tup[1]), decoder_outputs_placeholder: np.transpose(tup[0])})
+
+			# print pred_temp.shape
+			# print labels_temp.shape
+			# assert(not True)
+			#outputs are (70 chars, batch_size)
 			for i, row in enumerate(pred_temp):
-				pred_list.append(np.where(row == max(row))[0][0])
+				pred_list.append(np.where(row == max(row))[0][0])				
 			for i, row in enumerate(labels_temp):
 				label_list.append(np.where(row == max(row))[0][0])
-			loss_list.append(loss)
-		print "Loss: " + str(np.mean(loss_list)) + "\n"			
+			
+
+			# loss_list.append(loss)
+		# print "Loss: " + str(np.mean(loss_list)) + "\n"	
+				
 
 	# util.outputConfusionMatrix(pred_list, label_list, "confusion_matrix " + title + " " + today)
 	# util.get_accuracy(pred_list, label_list)
 
 if __name__ == '__main__':
 
-	print "Opening train data..."
-	train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
-	train_matrix = train_matrix[:1500, :]
-	print "Done opening train data!"
+	# print "Opening train data..."
+	# train_matrix = util.openPkl("train_matrix_rnn_short.pkl")
+	# train_matrix = train_matrix[:1500, :]
+	# print "Done opening train data!"
 
 	# train_labels = util.openPkl("train_labels_rnn_short.pkl")
 	# print "Running experiment 1..."
-	# print train_matrix.shape
-	train_seq(train_matrix, "./models/seq2seq", "seq2seq", max_sequence_length=70,
-		hidden_size=100, lr=0.005, saved_model_path="./models/seq2seq", RESUME=True, batch_size=60, n_epochs=10)
+	# train_seq(train_matrix, "./models/seq2seq", "seq2seq", max_sequence_length=70,
+	# 	hidden_size=100, lr=0.005, saved_model_path="./models/seq2seq", RESUME=True, batch_size=60, n_epochs=30)
 
-	# print "Opening dev data..."
-	# dev_matrix = util.openPkl("dev_matrix_rnn_short.pkl")	
-	# dev_labels = util.openPkl("dev_labels_rnn_short.pkl")
-	# print "Done opening dev data!"
-	# train_classifier(dev_matrix, dev_labels, "./models/seqlstm", "./models/seq2seq", "seqlstm", batch_size=60, n_epochs=2)
-	# test_classifier(dev_matrix, dev_labels, "./models/seqlstm--smallest loss", "test", batch_size=60)
+	print "Opening dev data..."
+	dev_matrix = util.openPkl("test_matrix_rnn_short.pkl")	
+	dev_labels = util.openPkl("test_labels_rnn_short.pkl")
+	print "Done opening dev data!"
+	# train_classifier(dev_matrix, dev_labels, "./models/seqlstm", "./models/seq2seq", "seqlstm", batch_size=60, n_epochs=20)
+	test_classifier(dev_matrix, dev_labels, "./models/seqlstm--smallest loss", "seq2seq test", batch_size=60)
+	# test_seq(dev_matrix, dev_labels, "./models/seqlstm--smallest loss", "")
+

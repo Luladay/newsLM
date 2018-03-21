@@ -76,11 +76,11 @@ def test(data_matrix, data_labels, saved_model_path, batch_size=1000):
 if __name__ == '__main__':
 	# change these filenames if the pickle files are in a Data folder
 
-	# print "Opening train data..."
-	# train_matrix = util.openPkl("train_matrix_short.pkl")
-	# train_labels = util.openPkl("train_labels_short.pkl")
-	# print "Done opening train data!"
-	# train(train_matrix, train_labels, "./models/baseline", batch_size=1000, n_epochs=1500)
+	print "Opening train data..."
+	train_matrix = util.openPkl("train_matrix_short.pkl")
+	train_labels = util.openPkl("train_labels_short.pkl")
+	print "Done opening train data!"
+	train(train_matrix, train_labels, "./models/baseline", batch_size=1000, n_epochs=20)
 
 	print "Opening test data..."
 	dev_matrix = util.openPkl("test_matrix_short.pkl")	
